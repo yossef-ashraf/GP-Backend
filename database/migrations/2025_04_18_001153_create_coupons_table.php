@@ -16,8 +16,7 @@ class CreateCouponsTable extends Migration
             $table->string('discount_type');
             $table->timestamp('valid_from');
             $table->timestamp('valid_to');
-  $table->timestamps();
-          
+            $table->timestamps();
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

@@ -10,7 +10,7 @@ class CreateAddressesTable extends Migration
     {
         Schema::create('addresses', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Assuming you have a users table
             $table->integer('area_id');
             $table->string('state');
             $table->string('zip_code');

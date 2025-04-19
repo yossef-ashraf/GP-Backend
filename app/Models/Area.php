@@ -2,23 +2,23 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Area extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
-    protected $table = 'areas';
+    protected $fillable = ['name'];
 
-    protected $fillable = [
-        'name'
-    ];
+    public function shippingValues()
+    {
+        return $this->hasMany(ShippingValue::class);
+    }
 
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at'
-    ];
-
+    public function addresses()
+    {
+        return $this->hasMany(Address::class);
+    }
 }

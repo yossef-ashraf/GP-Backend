@@ -12,8 +12,7 @@ class CreateCategoriesTable extends Migration
             $table->id();
             $table->integer('parent_id');
             $table->text('data');
-  $table->timestamps();
-          
+            $table->timestamps();      
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

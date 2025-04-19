@@ -2,41 +2,46 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-
-    protected $table = 'users';
+    use HasFactory, Notifiable;
 
     protected $fillable = [
-        'role_id',
         'name',
         'email',
         'password',
         'phone',
         'gender',
-        'date_of_birth'
+        'date_of_birth',
     ];
 
-    protected $dates = [
-        'created_at',
-        'updated_at',
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'date_of_birth' => 'date',
     ];
 
     public function addresses()
     {
         return $this->hasMany(Address::class);
     }
-    public function area()
+
+    public function orders()
     {
-        return $this->hasMany(Area::class);
-    }
-    public function getFullNameAttribute()
-    {
-        return $this->name;
+        return $this->hasMany(Order::class);
     }
 
+    public function cart()
+    {
+        return $this->hasOne(Cart::class);
+    }
 }

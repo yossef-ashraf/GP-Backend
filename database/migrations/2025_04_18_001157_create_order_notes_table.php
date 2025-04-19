@@ -10,10 +10,9 @@ class CreateOrdernotesTable extends Migration
     {
         Schema::create('order_notes', function (Blueprint $table) {
             $table->id();
-            $table->integer('order_id');
+            $table->foreignId('order_id')->constrained()->onDelete('cascade'); // Assuming you have an orders table
             $table->text('notes');
-  $table->timestamps();
-          
+            $table->timestamps();       
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

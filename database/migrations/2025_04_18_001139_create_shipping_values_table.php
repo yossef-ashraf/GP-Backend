@@ -10,10 +10,9 @@ class CreateShippingvaluesTable extends Migration
     {
         Schema::create('shipping_values', function (Blueprint $table) {
             $table->id();
-            $table->integer('area_id');
+            $table->foreignId('area_id')->constrained('areas')->onDelete('cascade');
             $table->float('value');
-  $table->timestamps();
-          
+            $table->timestamps();      
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

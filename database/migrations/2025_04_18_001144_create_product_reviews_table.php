@@ -10,11 +10,11 @@ class CreateProductreviewsTable extends Migration
     {
         Schema::create('product_reviews', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
-            $table->integer('product_id');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Assuming you have a users table
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->integer('rating');
             $table->text('comment');
-  $table->timestamps();
+            $table->timestamps();
         });
     }
 

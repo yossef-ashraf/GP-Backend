@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Order_item extends Model
+class OrderItem extends Model
 {
-    use SoftDeletes;
-
-    protected $table = 'order_items';
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'order_id',
@@ -21,25 +20,22 @@ class Order_item extends Model
         'variation_data'
     ];
 
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at'
+    protected $casts = [
+        'variation_data' => 'array',
     ];
 
     public function order()
     {
-        return $this->belongsTo(Order::class, 'order_id');
+        return $this->belongsTo(Order::class);
     }
 
     public function product()
     {
-        return $this->belongsTo(Product::class, 'product_id');
+        return $this->belongsTo(Product::class);
     }
 
     public function variation()
     {
-        return $this->belongsTo(Variation::class, 'variation_id');
+        return $this->belongsTo(ProductVariation::class, 'variation_id');
     }
-
 }

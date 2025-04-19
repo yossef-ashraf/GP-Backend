@@ -2,49 +2,51 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Order extends Model
 {
-    use SoftDeletes;
-
-    protected $table = 'orders';
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'user_id',
         'coupon_id',
         'address_id',
-        'payment_method_id',
+        'payment_method',
         'total_amount',
         'status',
+        'tracking_number',
         'notes'
     ];
 
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at'
+    protected $casts = [
+        'total_amount' => 'float',
     ];
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 
     public function coupon()
     {
-        return $this->belongsTo(Coupon::class, 'coupon_id');
+        return $this->belongsTo(Coupon::class);
     }
 
     public function address()
     {
-        return $this->belongsTo(Addres::class, 'address_id');
+        return $this->belongsTo(Address::class);
     }
 
-    public function payment_method()
+    public function items()
     {
-        return $this->belongsTo(Payment_method::class, 'payment_method_id');
+        return $this->hasMany(OrderItem::class);
     }
 
+    public function notes()
+    {
+        return $this->hasMany(OrderNote::class);
+    }
 }

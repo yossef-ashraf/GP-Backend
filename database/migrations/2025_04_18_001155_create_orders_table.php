@@ -10,15 +10,15 @@ class CreateOrdersTable extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->integer('user_id');
-            $table->integer('coupon_id');
-            $table->integer('address_id');
-            $table->integer('payment_method_id');
-            $table->float('total_amount');
-            $table->string('status');
-            $table->text('notes');
-  $table->timestamps();
-          
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Assuming you have a users table
+            $table->foreignId('coupon_id')->nullable()->constrained()->onDelete('cascade'); // Assuming you have a coupons table
+            $table->foreignId('address_id')->constrained()->onDelete('cascade'); // Assuming you have an addresses table
+            $table->integer('payment_method');
+            $table->enum('total_amount', ['cash', 'credit_card']);
+            $table->enum('status' , ['pre-pay','pending', 'completed', 'cancelled','payed']); // Order status
+            $table->string('tracking_number')->nullable(); // Optional tracking number for the order
+            $table->text('notes')->nullable(); // Optional notes for the order
+            $table->timestamps();        
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

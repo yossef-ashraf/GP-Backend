@@ -10,15 +10,14 @@ class CreateOrderitemsTable extends Migration
     {
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            $table->integer('order_id');
-            $table->integer('product_id');
-            $table->integer('variation_id');
+            $table->foreignId('order_id')->constrained()->onDelete('cascade'); // Assuming you have an orders table
+            $table->foreignId('product_id')->constrained()->onDelete('cascade'); // Assuming you have a products table
+            $table->foreignId('variation_id')->nullable()->constrained('product_variations')->onDelete('cascade'); // Assuming you have a product_variations table
             $table->float('total_amount');
             $table->integer('quantity');
             $table->integer('price');
             $table->text('variation_data');
-  $table->timestamps();
-          
+            $table->timestamps();        
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

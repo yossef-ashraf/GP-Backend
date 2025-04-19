@@ -10,10 +10,9 @@ class CreateProductcategoriesTable extends Migration
     {
         Schema::create('product_categories', function (Blueprint $table) {
             $table->id();
-            $table->integer('category_id');
-            $table->integer('product_id');
-  $table->timestamps();
-          
+            $table->foreignId('category_id')->constrained()->onDelete('cascade'); // Assuming you have a categories table
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
+            $table->timestamps();     
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

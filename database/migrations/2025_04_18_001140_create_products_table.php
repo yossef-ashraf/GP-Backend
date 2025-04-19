@@ -19,8 +19,7 @@ class CreateProductsTable extends Migration
             $table->string('stock_status');
             $table->integer('stock_qtn');
             $table->integer('total_sales');
-  $table->timestamps();
-          
+            $table->timestamps();      
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

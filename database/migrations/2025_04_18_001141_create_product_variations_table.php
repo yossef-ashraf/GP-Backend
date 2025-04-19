@@ -11,7 +11,7 @@ class CreateProductvariationsTable extends Migration
         Schema::create('product_variations', function (Blueprint $table) {
             $table->id();
             $table->string('slug');
-            $table->integer('product_id');
+            $table->foreignId('product_id')->constrained()->onDelete('cascade');
             $table->float('regular_price');
             $table->float('sale_price');
             $table->string('manage_stock');
@@ -20,8 +20,7 @@ class CreateProductvariationsTable extends Migration
             $table->integer('total_sales');
             $table->integer('backorder_limit');
             $table->string('sku');
-  $table->timestamps();
-          
+            $table->timestamps();        
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });
     }

@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Coupon extends Model
 {
-    use SoftDeletes;
-
-    protected $table = 'coupons';
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -20,10 +19,13 @@ class Coupon extends Model
         'valid_to'
     ];
 
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at'
+    protected $casts = [
+        'valid_from' => 'datetime',
+        'valid_to' => 'datetime',
     ];
 
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }
