@@ -18,13 +18,13 @@ class Product extends Model
         'sale_price',
         'sold_individually',
         'stock_status',
-        'stock_qtn',
+        'stock_qty',
         'total_sales'
     ];
 
     public function categories()
     {
-        return $this->belongsToMany(Category::class, 'product_category');
+        return $this->belongsToMany(Category::class, 'product_categories');
     }
 
     public function orderItems()

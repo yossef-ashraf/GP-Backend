@@ -15,10 +15,10 @@ class CreateProductsTable extends Migration
             $table->string('sku');
             $table->float('price');
             $table->float('sale_price');
-            $table->integer('sold_individually');
+            $table->integer('sold_individually')->nullable();
             $table->string('stock_status');
-            $table->integer('stock_qtn');
-            $table->integer('total_sales');
+            $table->integer('stock_qty');
+            $table->integer('total_sales')->default(0);
             $table->timestamps();      
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });

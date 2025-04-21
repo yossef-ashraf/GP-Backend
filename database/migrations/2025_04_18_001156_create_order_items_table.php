@@ -15,8 +15,8 @@ class CreateOrderitemsTable extends Migration
             $table->foreignId('variation_id')->nullable()->constrained('product_variations')->onDelete('cascade'); // Assuming you have a product_variations table
             $table->float('total_amount');
             $table->integer('quantity');
-            $table->integer('price');
-            $table->text('variation_data');
+            $table->float('price')->nullable();
+            $table->text('variation_data')->nullable();
             $table->timestamps();        
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
         });

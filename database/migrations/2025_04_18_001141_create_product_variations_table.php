@@ -16,7 +16,7 @@ class CreateProductvariationsTable extends Migration
             $table->float('sale_price');
             $table->string('manage_stock');
             $table->string('stock_status');
-            $table->integer('stock_qtn');
+            $table->integer('stock_qty');
             $table->integer('total_sales');
             $table->integer('backorder_limit');
             $table->string('sku');

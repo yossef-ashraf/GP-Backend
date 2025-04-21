@@ -170,7 +170,7 @@ class Product extends Model
         'sale_price',
         'sold_individually',
         'stock_status',
-        'stock_qtn',
+        'stock_qty',
         'total_sales'
     ];
 

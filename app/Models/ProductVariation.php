@@ -12,12 +12,16 @@ class ProductVariation extends Model
 
     protected $fillable = [
         'product_id',
+        'slug',
         'variation_data',
-        'price',
+        'regular_price',
         'sale_price',
+        'manage_stock',
         'sku',
         'stock_status',
-        'stock_qty'
+        'stock_qty',
+        'total_sales',
+        'backorder_limit'
     ];
 
     protected $casts = [

@@ -15,7 +15,7 @@ class ProductCategory extends Model
      *
      * @var string
      */
-    protected $table = 'product_category';
+    protected $table = 'product_categories';
 
     /**
      * The attributes that are mass assignable.

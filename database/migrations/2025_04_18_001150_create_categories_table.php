@@ -10,7 +10,7 @@ class CreateCategoriesTable extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->integer('parent_id');
+            $table->integer('parent_id')->nullable()->default(null);
             $table->text('data');
             $table->timestamps();      
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
