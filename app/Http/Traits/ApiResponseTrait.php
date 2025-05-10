@@ -5,30 +5,21 @@ namespace App\Http\Traits;
 trait ApiResponseTrait
 {
 
-    /**
-     * [
-     *  code => default 200 and dataType is int.
-     *  message => default null and dataType is String.
-     *  errors => default null and dataType is Array.
-     *  data => default null and dataType id Array
-     * ]
-     */
-
-
-    public function apiResponse($code = 200, $message, $errors = null, $data = null, $pagination = null)
+    protected function successResponse($data, string $message = null, int $code = 200)
     {
-        $array = [
-            'status' => $code,
+        return response()->json([
+            'status' => 'Success',
             'message' => $message,
-        ];
-        if (is_null($data) && !is_null($errors)) {
-            $array['errors'] = $errors;
-        } elseif (is_null($errors) && !is_null($data)) {
-            $array['data'] = $data;
-        }
-        if (!is_null($pagination)) {
-            $array['pagination'] = $pagination;
-        }
-        return response($array, $code);
+            'data' => $data
+        ], $code);
+    }
+
+    protected function errorResponse(string $message = null, int $code = 400, $data = null)
+    {
+        return response()->json([
+            'status' => 'Error',
+            'message' => $message,
+            'data' => $data
+        ], $code);
     }
 }
