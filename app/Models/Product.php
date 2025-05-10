@@ -4,32 +4,37 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
-        'slug',
-        'type',
-        'sku',
+        'name',
+        'description',
         'price',
-        'sale_price',
-        'sold_individually',
-        'stock_status',
-        'stock_qty',
-        'total_sales'
+        'discount_price',
+        'stock',
+        'category_id',
+        'image',
+        'is_active',
+        'sku',
+        'weight',
+        'dimensions',
     ];
 
-    public function categories()
-    {
-        return $this->belongsToMany(Category::class, 'product_categories');
-    }
+    protected $casts = [
+        'price' => 'float',
+        'discount_price' => 'float',
+        'stock' => 'integer',
+        'is_active' => 'boolean',
+        'weight' => 'float',
+        'dimensions' => 'json',
+    ];
 
-    public function orderItems()
+    public function category()
     {
-        return $this->hasMany(OrderItem::class);
+        return $this->belongsTo(Category::class);
     }
 
     public function cartItems()
@@ -37,8 +42,8 @@ class Product extends Model
         return $this->hasMany(CartItem::class);
     }
 
-    public function variations()
+    public function orderItems()
     {
-        return $this->hasMany(ProductVariation::class);
+        return $this->hasMany(OrderItem::class);
     }
 }
