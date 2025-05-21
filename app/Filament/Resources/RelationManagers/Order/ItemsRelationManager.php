@@ -50,7 +50,7 @@ class ItemsRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('product.name')
+                Tables\Columns\TextColumn::make('product.sku')
                     ->searchable(),
                     
                 Tables\Columns\TextColumn::make('variation.name')

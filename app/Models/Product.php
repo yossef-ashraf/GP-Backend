@@ -31,6 +31,10 @@ class Product extends Model
         'weight' => 'float',
         'dimensions' => 'json',
     ];
+    public function variations()
+    {
+        return $this->belongsTo(ProductVariation::class);
+    }
 
     public function category()
     {

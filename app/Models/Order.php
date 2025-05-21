@@ -44,6 +44,10 @@ class Order extends Model
         return $this->belongsTo(Address::class);
     }
 
+    public function addresses()
+    {
+        return $this->address();
+    }
     public function shippingMethod()
     {
         return $this->belongsTo(ShippingMethod::class);
@@ -54,11 +58,20 @@ class Order extends Model
         return $this->belongsTo(Coupon::class);
     }
 
+    public function coupons()
+    {
+        return $this->coupon();
+    }
+
     public function items()
     {
         return $this->hasMany(OrderItem::class);
     }
 
+    public function notes()
+    {
+        return $this->hasMany(OrderNote::class);
+    }
     /**
      * Calculate the order total
      */
