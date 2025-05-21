@@ -36,6 +36,12 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+            User::create([
+            'password' => Hash::make('123'),
+            'name' => 'admin',
+            'email' => 'admin@admin.com'
+        ]);
+
         // 3. Create users
         $users = User::factory()->count(5)->create([
             'password' => Hash::make('password'),
@@ -132,7 +138,7 @@ class DatabaseSeeder extends Seeder
                 // Add order items
                 for ($j = 1; $j <= rand(1, 5); $j++) {
                     $product = $products[array_rand($products)];
-                    $variation = $product->variations->isNotEmpty() ? 
+                    $variation = $product->variations && $product->variations->isNotEmpty() ? 
                         $product->variations->random() : null;
                     
                     $quantity = rand(1, 3);

@@ -1,59 +1,90 @@
 version: '3'
 services:
-  app:
+
+  php:
     build:
+      args:
+        user: yossef
+        uid: 1000
       context: .
-      dockerfile: Dockerfile
-    image: laravel-app
-    container_name: laravel-app
+      dockerfile: ./Dockerfile
+    container_name: backend-php
     restart: unless-stopped
-    tty: true
-    environment:
-      SERVICE_NAME: app
-      SERVICE_TAGS: dev
-    working_dir: /var/www/html
     volumes:
-      - ./:/var/www/html
-      - ./php/local.ini:/usr/local/etc/php/conf.d/local.ini
+      - ./:/var/www/
+      - $HOME/.composer/:$HOME/.composer/
+    environment:
+      - "DB_HOST=mysql"
+      - "DB_DATABASE=sql"
+      - "DB_USERNAME=sql"
+      - "DB_PASSWORD=sql"
+      - "DB_PORT=3306"
+      - "REDIS_HOST=redis"
+      - "REDIS_PORT=6379"
+    depends_on:
+      - mysql
+      - redis
     networks:
-      - app-network
+      - service-network
 
-  webserver:
+  nginx:
     image: nginx:alpine
-    container_name: laravel-webserver
+    container_name: web-server
     restart: unless-stopped
     tty: true
     ports:
-      - "80:80"
-      - "443:443"
+      - "8000:80"
     volumes:
-      - ./:/var/www/html
-      - ./nginx/conf.d/:/etc/nginx/conf.d/
+      - ./:/var/www
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d/
+    depends_on:
+      - php
     networks:
-      - app-network
+      - service-network
 
-  db:
-    image: mysql:8.0
-    container_name: laravel-db
+  mysql:
+    image: mariadb:10.5.8
+    container_name: backend-mysql
     restart: unless-stopped
-    tty: true
-    ports:
-      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
     environment:
-      MYSQL_DATABASE: laravel
-      MYSQL_ROOT_PASSWORD: your_mysql_root_password
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mysql
-    volumes:
-      - dbdata:/var/lib/mysql/
-      - ./mysql/my.cnf:/etc/mysql/my.cnf
+      - "MYSQL_ROOT_PASSWORD=sql"
+      - "MYSQL_DATABASE=sql"
+      - "MYSQL_USER=sql"
+      - "MYSQL_PASSWORD=sql"
+    ports:
+      - "3307:3306"
     networks:
-      - app-network
+      - service-network
 
-networks:
-  app-network:
-    driver: bridge
+  phpmyadmin:
+    image: phpmyadmin
+    container_name: backend-phpmyadmin
+    restart: always
+    ports:
+      - "8001:80"
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mysql
+    depends_on:
+      - mysql
+    networks:
+      - service-network
+
+  redis:
+    image: redis:4.0-alpine
+    container_name: backend-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    networks:
+      - service-network
 
 volumes:
-  dbdata:
-    driver: local
+  mysqldata:
+
+networks:
+  service-network:
+    driver: bridge

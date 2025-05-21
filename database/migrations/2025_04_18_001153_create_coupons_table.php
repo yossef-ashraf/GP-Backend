@@ -4,9 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateCouponsTable extends Migration
+return new class extends Migration
 {
-    public function up()
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
     {
         Schema::create('coupons', function (Blueprint $table) {
             $table->id();
@@ -14,15 +17,18 @@ class CreateCouponsTable extends Migration
             $table->string('code');
             $table->float('discount_value');
             $table->string('discount_type');
-            $table->timestamp('valid_from');
-            $table->timestamp('valid_to');
+            $table->timestamp('valid_from')->useCurrent();
+            $table->timestamp('valid_to')->nullable();
             $table->timestamps();
-            $table->softDeletes(); // This will add a deleted_at column for soft deletes
+            $table->softDeletes();
         });
     }
 
-    public function down()
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
     {
         Schema::dropIfExists('coupons');
     }
-}
+};
