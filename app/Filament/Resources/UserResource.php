@@ -73,7 +73,7 @@ class UserResource extends Resource
             ->filters([
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                //Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -115,7 +115,7 @@ class UserResource extends Resource
         return [
             'index' => Pages\User\ListUser::route('/'),
             'create' => Pages\User\CreateUser::route('/create'),
-            'view' => Pages\User\ViewUser::route('/{record}'),
+            //'view' => Pages\User\ViewUser::route('/{record}'),
             'edit' => Pages\User\EditUser::route('/{record}/edit'),
         ];
     }

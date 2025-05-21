@@ -146,7 +146,7 @@ class OrderResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                //Tables\Actions\ViewAction::make(),
                 // Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -266,7 +266,7 @@ class OrderResource extends Resource
         return [
             'index' => Pages\Order\ListOrder::route('/'),
             'create' => Pages\Order\CreateOrder::route('/create'),
-            'view' => Pages\Order\ViewOrder::route('/{record}'),
+            //'view' => Pages\Order\ViewOrder::route('/{record}'),
             'edit' => Pages\Order\EditOrder::route('/{record}/edit'),
         ];
     }

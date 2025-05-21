@@ -18,12 +18,12 @@ class ListArea extends ListRecords
         ];
     }
 
-    public function getTabs(): array
-    {
-        return [
-            'all' => Tab::make('All Records'),
-            'active' => Tab::make('Active')
-                ->modifyQueryUsing(fn (Builder $query) => $query->whereNotNull('created_at')),
-        ];
-    }
+    // public function getTabs(): array
+    // {
+    //     return [
+    //         'all' => Tab::make('All Records'),
+    //         'active' => Tab::make('Active')
+    //             ->modifyQueryUsing(fn (Builder $query) => $query->whereNotNull('created_at')),
+    //     ];
+    // }
 }

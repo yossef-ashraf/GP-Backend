@@ -221,7 +221,7 @@ class ProductResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                //Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -329,7 +329,7 @@ class ProductResource extends Resource
         return [
             'index' => Pages\Product\ListProduct::route('/'),
             'create' => Pages\Product\CreateProduct::route('/create'),
-            'view' => Pages\Product\ViewProduct::route('/{record}'),
+            //'view' => Pages\Product\ViewProduct::route('/{record}'),
             'edit' => Pages\Product\EditProduct::route('/{record}/edit'),
         ];
     }

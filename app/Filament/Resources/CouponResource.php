@@ -132,7 +132,7 @@ class CouponResource extends Resource
                     ->query(fn (Builder $query) => $query->where('valid_to', '<', now())),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                //Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -196,7 +196,7 @@ class CouponResource extends Resource
         return [
             'index' => Pages\Coupon\ListCoupon::route('/'),
             'create' => Pages\Coupon\CreateCoupon::route('/create'),
-            'view' => Pages\Coupon\ViewCoupon::route('/{record}'),
+            //'view' => Pages\Coupon\ViewCoupon::route('/{record}'),
             'edit' => Pages\Coupon\EditCoupon::route('/{record}/edit'),
         ];
     }

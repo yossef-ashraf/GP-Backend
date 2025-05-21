@@ -79,7 +79,7 @@ class Shipping_valueResource extends Resource
                     ->label('Filter by Area')
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                //Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -131,7 +131,7 @@ class Shipping_valueResource extends Resource
         return [
             'index' => Pages\Shipping_value\ListShipping_value::route('/'),
             'create' => Pages\Shipping_value\CreateShipping_value::route('/create'),
-            'view' => Pages\Shipping_value\ViewShipping_value::route('/{record}'),
+            //'view' => Pages\Shipping_value\ViewShipping_value::route('/{record}'),
             'edit' => Pages\Shipping_value\EditShipping_value::route('/{record}/edit'),
         ];
     }

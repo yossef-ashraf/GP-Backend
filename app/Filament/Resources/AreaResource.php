@@ -63,7 +63,7 @@ class AreaResource extends Resource
                 Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                //Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -106,16 +106,16 @@ class AreaResource extends Resource
         return [
             'index' => Pages\Area\ListArea::route('/'),
             'create' => Pages\Area\CreateArea::route('/create'),
-            'view' => Pages\Area\ViewArea::route('/{record}'),
+            //'view' => Pages\Area\ViewArea::route('/{record}'),
             'edit' => Pages\Area\EditArea::route('/{record}/edit'),
         ];
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
-    }
+    // public static function getEloquentQuery(): Builder
+    // {
+    //     return parent::getEloquentQuery()
+    //         ->withoutGlobalScopes([
+    //             SoftDeletingScope::class,
+    //         ]);
+    // }
 }

@@ -80,7 +80,7 @@ class CategoryResource extends Resource
                     ->label('Parent Category')
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                //Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
@@ -127,7 +127,7 @@ class CategoryResource extends Resource
         return [
             'index' => Pages\Category\ListCategory::route('/'),
             'create' => Pages\Category\CreateCategory::route('/create'),
-            'view' => Pages\Category\ViewCategory::route('/{record}'),
+            //'view' => Pages\Category\ViewCategory::route('/{record}'),
             'edit' => Pages\Category\EditCategory::route('/{record}/edit'),
         ];
     }
