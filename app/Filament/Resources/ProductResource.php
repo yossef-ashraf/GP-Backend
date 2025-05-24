@@ -71,7 +71,7 @@ class ProductResource extends Resource
                                 Forms\Components\TextInput::make('sale_price')
                                     ->numeric()
                                     ->prefix(config('settings.currency_symbol', '$'))
-                                    ->gt('price'),
+                                    ->lt('price'),
                                     
                                 Forms\Components\Toggle::make('sold_individually')
                                     ->label('Sold individually')
@@ -109,9 +109,8 @@ class ProductResource extends Resource
                             
                         Forms\Components\Tabs\Tab::make('Images')
                             ->schema([
-                                Forms\Components\FileUpload::make('images')
+                                Forms\Components\FileUpload::make('image')
                                     ->image()
-                                    ->multiple()
                                     ->directory('products')
                                     ->columnSpanFull(),
                             ]),
@@ -156,10 +155,8 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('images')
-                    ->stacked()
-                    ->limit(1)
-                    ->circular(),
+                Tables\Columns\ImageColumn::make('image')
+                    ->stacked(),
                     
                 Tables\Columns\TextColumn::make('slug')
                     ->searchable()
@@ -227,9 +224,9 @@ class ProductResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    // Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make(),
+                    // Tables\Actions\ForceDeleteBulkAction::make(),
+                    // Tables\Actions\RestoreBulkAction::make(),
                 ]),
             ])
             ->defaultSort('created_at', 'desc')
@@ -237,82 +234,6 @@ class ProductResource extends Resource
                 Tables\Grouping\Group::make('type')
                     ->label('Product Type')
                     ->collapsible(),
-            ]);
-    }
-
-    public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist
-            ->schema([
-                Components\Section::make('Product Information')
-                    ->schema([
-                        Components\TextEntry::make('name'),
-                        Components\TextEntry::make('type')
-                            ->badge()
-                            ->color(fn (string $state): string => match ($state) {
-                                'simple' => 'info',
-                                'variable' => 'success',
-                                default => 'gray',
-                            }),
-                        Components\TextEntry::make('price')
-                            ->money(),
-                        Components\TextEntry::make('sale_price')
-                            ->money(),
-                        Components\TextEntry::make('stock_status')
-                            ->badge()
-                            ->color(fn (string $state): string => match ($state) {
-                                'in_stock' => 'success',
-                                'out_of_stock' => 'danger',
-                                'on_backorder' => 'warning',
-                                default => 'gray',
-                            }),
-                        Components\TextEntry::make('stock_qty'),
-                        Components\TextEntry::make('short_description')
-                            ->columnSpanFull(),
-                        Components\TextEntry::make('description')
-                            ->html()
-                            ->columnSpanFull(),
-                    ])->columns(2),
-                    
-                Components\Section::make('Categories')
-                    ->schema([
-                        Components\RepeatableEntry::make('categories')
-                            ->schema([
-                                Components\TextEntry::make('data'),
-                            ])
-                            ->grid(3),
-                    ]),
-                    
-                Components\Section::make('Images')
-                    ->schema([
-                        Components\ImageEntry::make('images')
-                            ->stacked()
-                            ->height(150)
-                            ->width(150),
-                    ]),
-                    
-                Components\Section::make('Variations')
-                    ->hidden(fn ($record) => $record->type !== 'variable')
-                    ->schema([
-                        Components\RepeatableEntry::make('variations')
-                            ->schema([
-                                Components\TextEntry::make('sku'),
-                                Components\TextEntry::make('price')
-                                    ->money(),
-                                Components\TextEntry::make('sale_price')
-                                    ->money(),
-                                Components\TextEntry::make('stock_status')
-                                    ->badge()
-                                    ->color(fn (string $state): string => match ($state) {
-                                        'in_stock' => 'success',
-                                        'out_of_stock' => 'danger',
-                                        'on_backorder' => 'warning',
-                                        default => 'gray',
-                                    }),
-                                Components\TextEntry::make('stock_qty'),
-                            ])
-                            ->columns(3),
-                    ]),
             ]);
     }
 
@@ -336,10 +257,9 @@ class ProductResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->with(['categories', 'variations'])
-            ->withoutGlobalScopes([
-                SoftDeletingScope::class,
-            ]);
+        $query = parent::getEloquentQuery()
+            ->with(['categories', 'variations']);
+        
+        return $query;
     }
 }

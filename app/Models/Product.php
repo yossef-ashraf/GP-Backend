@@ -16,6 +16,7 @@ class Product extends Model
         'discount_price',
         'stock',
         'category_id',
+        'slug',
         'image',
         'is_active',
         'sku',
@@ -23,19 +24,20 @@ class Product extends Model
         'dimensions',
     ];
 
-    protected $casts = [
-        'price' => 'float',
-        'discount_price' => 'float',
-        'stock' => 'integer',
-        'is_active' => 'boolean',
-        'weight' => 'float',
-        'dimensions' => 'json',
-    ];
+    // protected $casts = [
+    //     'price' => 'float',
+    //     'discount_price' => 'float',
+    //     'stock' => 'integer',
+    //     'is_active' => 'boolean',
+    //     'weight' => 'float',
+    //     'dimensions' => 'json',
+    // ];
+    
     public function variations()
     {
-        return $this->belongsTo(ProductVariation::class);
+        return $this->hasMany(ProductVariation::class);
     }
-
+    
     public function category()
     {
         return $this->belongsTo(Category::class);

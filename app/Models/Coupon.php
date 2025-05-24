@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Coupon extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -15,15 +16,16 @@ class Coupon extends Model
      * @var array
      */
     protected $fillable = [
+        'name',
         'code',
-        'type',
-        'value',
-        'min_order_amount',
-        'starts_at',
-        'expires_at',
+        'discount_value',
+        'discount_type',
+        'valid_from',
+        'valid_to',
         'is_active',
         'usage_limit',
         'usage_count',
+        'min_order_amount',
     ];
 
     /**
@@ -32,10 +34,10 @@ class Coupon extends Model
      * @var array
      */
     protected $casts = [
-        'value' => 'float',
+        'discount_value' => 'float',
         'min_order_amount' => 'float',
-        'starts_at' => 'datetime',
-        'expires_at' => 'datetime',
+        'valid_from' => 'datetime',
+        'valid_to' => 'datetime',
         'is_active' => 'boolean',
         'usage_limit' => 'integer',
         'usage_count' => 'integer',

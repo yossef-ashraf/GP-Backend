@@ -13,8 +13,14 @@ class EditProduct extends EditRecord
     {
         return [
             \Filament\Actions\DeleteAction::make(),
-            \Filament\Actions\ForceDeleteAction::make(),
-            \Filament\Actions\RestoreAction::make(),
+            // \Filament\Actions\ForceDeleteAction::make(),
+            // \Filament\Actions\RestoreAction::make(),
         ];
+    }
+
+   
+    protected function beforSave()
+    {
+        dump($this->data);
     }
 }

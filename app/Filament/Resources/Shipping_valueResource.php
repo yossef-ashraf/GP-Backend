@@ -38,6 +38,7 @@ class Shipping_valueResource extends Resource
                     
                 Forms\Components\TextInput::make('value')
                     ->numeric()
+                    ->minValue(0)
                     ->required()
                     ->prefix(config('settings.currency_symbol'))
                     ->columnSpanFull()

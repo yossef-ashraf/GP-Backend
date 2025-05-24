@@ -14,6 +14,7 @@ class CreateProductsTable extends Migration
             $table->string('type');
             $table->string('sku');
             $table->float('price');
+            $table->string('image')->nullable();
             $table->float('sale_price');
             $table->integer('sold_individually')->nullable();
             $table->string('stock_status');

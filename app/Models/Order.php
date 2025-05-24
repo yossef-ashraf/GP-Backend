@@ -75,6 +75,7 @@ class Order extends Model
     /**
      * Calculate the order total
      */
+    // في دالة calculateTotal
     public function calculateTotal()
     {
         // Calculate subtotal from items
@@ -89,10 +90,10 @@ class Order extends Model
         
         // Apply coupon discount if available
         if ($this->coupon) {
-            if ($this->coupon->type === 'percentage') {
-                $this->discount = $subtotal * ($this->coupon->value / 100);
+            if ($this->coupon->discount_type === 'percentage') {
+                $this->discount = $subtotal * ($this->coupon->discount_value / 100);
             } else {
-                $this->discount = $this->coupon->value;
+                $this->discount = $this->coupon->discount_value;
             }
             
             // Ensure discount doesn't exceed total

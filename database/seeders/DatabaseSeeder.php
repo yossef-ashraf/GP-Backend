@@ -32,17 +32,18 @@ class DatabaseSeeder extends Seeder
         foreach ($areas as $area) {
             ShippingValue::create([
                 'area_id' => $area->id,
-                'value' => rand(10, 50)
+                'value' => rand(10, 30) // تكلفة شحن معقولة للكتب
             ]);
         }
 
-            User::create([
+        // 3. Create admin user
+        User::create([
             'password' => Hash::make('123'),
             'name' => 'admin',
             'email' => 'admin@admin.com'
         ]);
 
-        // 3. Create users
+        // 4. Create regular users
         $users = User::factory()->count(5)->create([
             'password' => Hash::make('password'),
             'name' => fn() => fake()->name(),
@@ -52,7 +53,7 @@ class DatabaseSeeder extends Seeder
             'date_of_birth' => fn() => fake()->date(),
         ]);
 
-        // 4. Create addresses for users
+        // 5. Create addresses for users
         foreach ($users as $user) {
             Address::create([
                 'user_id' => $user->id,
@@ -65,49 +66,132 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 5. Create categories
+        // 6. Create book categories
         $categories = [];
-        $categoryNames = ['إلكترونيات', 'ملابس', 'أثاث', 'أطعمة', 'كتب'];
+        $categoryNames = [
+            'روايات عربية',
+            'روايات مترجمة',
+            'كتب أطفال',
+            'كتب تعليمية',
+            'كتب دينية',
+            'كتب تاريخية',
+            'كتب علمية',
+            'كتب تنمية بشرية',
+            'كتب سياسية'
+        ];
         
         foreach ($categoryNames as $data) {
             $categories[] = Category::create(['data' => $data]);
         }
 
-        // 6. Create products
+        // 7. Create subcategories
+        $subcategories = [
+            'روايات عربية' => ['روايات بوليسية', 'روايات رومانسية', 'روايات خيال علمي'],
+            'روايات مترجمة' => ['روايات إنجليزية', 'روايات فرنسية', 'روايات روسية'],
+            'كتب أطفال' => ['قصص مصورة', 'قصص تعليمية', 'ألعاب ذكاء'],
+            'كتب تعليمية' => ['مناهج دراسية', 'لغات أجنبية', 'برمجة وتكنولوجيا']
+        ];
+
+        $categoryMap = collect($categories)->mapWithKeys(function ($category) {
+            return [$category->data => $category];
+        });
+
+        foreach ($subcategories as $parentName => $subNames) {
+            $parent = $categoryMap[$parentName];
+            foreach ($subNames as $subName) {
+                Category::create([
+                    'parent_id' => $parent->id,
+                    'data' => $subName
+                ]);
+            }
+        }
+
+        // 8. Create book products
+        $bookTitles = [
+            'عودة للزمن الجميل',
+            'رحلة إلى المريخ',
+            'أساسيات البرمجة بلغة بايثون',
+            'تاريخ مصر القديمة',
+            'قصص الأنبياء',
+            'فن إدارة الوقت',
+            'الذكاء العاطفي',
+            'مبادئ الفيزياء الحديثة',
+            'تعلم اللغة الإنجليزية في 30 يوم',
+            'ألف ليلة وليلة',
+            'العادات السبع للناس الأكثر فعالية',
+            'فن الحرب',
+            'التفكير خارج الصندوق',
+            'رواية البؤساء',
+            'رواية الجريمة والعقاب'
+        ];
+
+        $authors = [
+            'نجيب محفوظ',
+            'طه حسين',
+            'أحمد خالد توفيق',
+            'يوسف زيدان',
+            'إبراهيم عيسى',
+            'علاء الأسواني',
+            'غسان كنفاني',
+            'ستيفن كوفي',
+            'روبرت كيوساكي',
+            'فيكتور هوجو',
+            'فيودور دوستويفسكي',
+            'جورج أورويل',
+            'باولو كويلو'
+        ];
+
         $products = [];
-        for ($i = 1; $i <= 10; $i++) {
+        foreach ($bookTitles as $index => $title) {
+            $price = rand(50, 300);
+            $salePrice = rand(80, 100) / 100 * $price; // 80-100% of original price
+            
             $product = Product::create([
-                'slug' => 'product-' . $i,
-                'type' => ['simple', 'variable'][rand(0, 1)],
-                'sku' => 'SKU-' . rand(1000, 9999),
-                'price' => rand(100, 1000),
-                'sale_price' => rand(50, 900),
+                'slug' => 'book-' . ($index + 1),
+                'type' => 'simple', // معظم الكتب بسيطة وليست متغيرة
+                'sku' => 'BOOK-' . rand(1000, 9999),
+                'price' => $price,
+                'sale_price' => $salePrice,
                 'stock_status' => ['in_stock', 'out_of_stock'][rand(0, 1)],
-                'stock_qty' => rand(0, 100),
+                'stock_qty' => rand(5, 100),
             ]);
 
-            // Convert array to collection and get random categories
-            $randomCategories = collect($categories)->random(rand(1, 3));
+            // إضافة بيانات إضافية للكتاب (يمكن تخزينها في حقل الوصف أو في جدول منفصل)
+            // هنا نفترض أن هناك حقل للوصف في جدول المنتجات
+            $authorIndex = $index % count($authors);
+            $description = 'المؤلف: ' . $authors[$authorIndex] . '\n';
+            $description .= 'عدد الصفحات: ' . rand(100, 500) . '\n';
+            $description .= 'سنة النشر: ' . rand(2000, 2023) . '\n';
+            $description .= 'الناشر: دار النشر للكتب العربية\n';
+            $description .= 'وصف الكتاب: هذا الكتاب يتناول موضوعات متنوعة تهم القارئ العربي.';
+            
+            // إذا كان هناك حقل للوصف في جدول المنتجات
+            // $product->update(['description' => $description]);
+
+            // ربط المنتج بفئة أو أكثر
+            $randomCategories = collect($categories)->random(rand(1, 2));
             $product->categories()->attach($randomCategories);
 
-            // Create variations if product is variable
-            if ($product->type === 'variable') {
-                for ($j = 1; $j <= rand(1, 3); $j++) {
+            // إنشاء متغيرات للكتب التي لها إصدارات مختلفة (مثل غلاف عادي وفاخر)
+            if (rand(0, 10) > 7) { // 30% من الكتب لها إصدارات متعددة
+                $variations = [
+                    'غلاف عادي' => ['price_modifier' => -20, 'sku_suffix' => 'STD'],
+                    'غلاف فاخر' => ['price_modifier' => 50, 'sku_suffix' => 'DLX'],
+                    'نسخة إلكترونية' => ['price_modifier' => -50, 'sku_suffix' => 'EBOOK'],
+                ];
+
+                foreach ($variations as $name => $data) {
                     ProductVariation::create([
                         'product_id' => $product->id,
-                        'slug' => $product->slug . '-variation-' . $j,
-                        'regular_price' => $product->price + rand(-50, 50),
-                        'sale_price' => $product->sale_price + rand(-30, 30),
-                        'sku' => $product->sku . '-VAR-' . $j,
+                        'slug' => $product->slug . '-' . strtolower(str_replace(' ', '-', $name)),
+                        'regular_price' => $product->price + $data['price_modifier'],
+                        'sale_price' => $salePrice + $data['price_modifier'] * 0.9,
+                        'sku' => $product->sku . '-' . $data['sku_suffix'],
                         'manage_stock' => 'yes',
                         'stock_status' => $product->stock_status,
-                        'stock_qty' => rand(0, 50),
+                        'stock_qty' => rand(5, 30),
                         'total_sales' => 0,
-                        'backorder_limit' => rand(5, 20),
-                        // 'variation_data' => [
-                        //     'color' => ['أحمر', 'أزرق', 'أخضر'][rand(0, 2)],
-                        //     'size' => ['صغير', 'متوسط', 'كبير'][rand(0, 2)]
-                        // ]
+                        'backorder_limit' => rand(5, 10),
                     ]);
                 }
             }
@@ -115,34 +199,57 @@ class DatabaseSeeder extends Seeder
             $products[] = $product;
         }
 
-        // 8. Create orders
+        // 9. Create coupons for bookstore
+        $couponCodes = ['BOOK10', 'READER20', 'WELCOME15', 'SUMMER30'];
+        $discountTypes = ['percentage', 'fixed'];
+        
+        foreach ($couponCodes as $index => $code) {
+            $discountType = $discountTypes[$index % 2];
+            $discountValue = $discountType === 'percentage' ? rand(10, 30) : rand(20, 50);
+            
+            Coupon::create([
+                'name' => 'كوبون ' . $code,
+                'code' => $code,
+                'discount_value' => $discountValue,
+                'discount_type' => $discountType,
+                'valid_from' => now(),
+                'valid_to' => now()->addMonths(rand(1, 3)),
+                'is_active' => true,
+                'usage_limit' => rand(10, 100),
+                'usage_count' => 0,
+                'min_order_amount' => rand(100, 200)
+            ]);
+        }
+
+        // 10. Create orders
         foreach ($users as $user) {
             for ($i = 1; $i <= rand(1, 3); $i++) {
+                // اختيار كوبون عشوائي أحيانًا
+                $couponId = rand(0, 10) > 7 ? Coupon::inRandomOrder()->first()?->id : null;
+                
                 $order = Order::create([
                     'user_id' => $user->id,
                     'address_id' => $user->addresses->first()->id,
-                    'coupon_id' =>  null,
-                    'payment_method' => ['cash' => 1, 'credit_card' => 2][['cash', 'credit_card'][rand(0, 1)]],
-                    'status' => [
-                        'pre-pay' => 1, 
-                        'pending' => 2, 
-                        'completed' => 3, 
-                        'cancelled' => 4, 
-                        'payed' => 5
-                    ][['pre-pay', 'pending', 'completed', 'cancelled', 'payed'][rand(0, 4)]],
-                    'total_amount' => 0, // Will be updated later
+                    'coupon_id' => $couponId,
+                    'payment_method' => ['cash', 'credit_card'][rand(0, 1)],
+                    'status' => ['pre-pay', 'pending', 'completed', 'cancelled', 'payed'][rand(0, 4)],
+                    'total_amount' => 0, // سيتم تحديثه لاحقًا
                 ]);
 
                 $totalAmount = 0;
 
-                // Add order items
-                for ($j = 1; $j <= rand(1, 5); $j++) {
-                    $product = $products[array_rand($products)];
-                    $variation = $product->variations && $product->variations->isNotEmpty() ? 
-                        $product->variations->random() : null;
+                // إضافة عناصر الطلب (الكتب)
+                $orderBooksCount = rand(1, 5);
+                $selectedProducts = collect($products)->random($orderBooksCount);
+                
+                foreach ($selectedProducts as $product) {
+                    $variation = null;
+                    if ($product->variations && $product->variations->count() > 0 && rand(0, 1)) {
+                        $variation = $product->variations->random();
+                    }
                     
                     $quantity = rand(1, 3);
-                    $price = $variation ? $variation->sale_price : $product->price;
+                    $price = $variation ? $variation->sale_price : $product->sale_price;
                     $itemTotal = $price * $quantity;
 
                     OrderItem::create([
@@ -152,28 +259,29 @@ class DatabaseSeeder extends Seeder
                         'quantity' => $quantity,
                         'price' => $price,
                         'total_amount' => $itemTotal,
-                        'variation_data' => $variation?->variation_data
+                        'variation_data' => null
                     ]);
 
                     $totalAmount += $itemTotal;
                 }
 
-                // Apply coupon discount if exists
-                if ($order->coupon) {
-                    if ($order->coupon->discount_type === 'percentage') {
-                        $totalAmount *= (1 - ($order->coupon->discount_value / 100));
+                // تطبيق خصم الكوبون إذا وجد
+                if ($order->coupon_id) {
+                    $coupon = Coupon::find($order->coupon_id);
+                    if ($coupon->discount_type === 'percentage') {
+                        $totalAmount *= (1 - ($coupon->discount_value / 100));
                     } else {
-                        $totalAmount = max(0, $totalAmount - $order->coupon->discount_value);
+                        $totalAmount = max(0, $totalAmount - $coupon->discount_value);
                     }
                 }
 
                 $order->update(['total_amount' => $totalAmount]);
 
-                // Add order notes
+                // إضافة ملاحظات للطلب
                 if (rand(0, 1)) {
                     OrderNote::create([
                         'order_id' => $order->id,
-                        'notes' => ['تم الشحن', 'جاري التجهيز', 'ملاحظة خاصة'][rand(0, 2)]
+                        'notes' => ['تم شحن الكتب', 'جاري تجهيز الطلب', 'يرجى الاتصال قبل التوصيل'][rand(0, 2)]
                     ]);
                 }
             }
