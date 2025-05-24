@@ -36,7 +36,9 @@ class ProductController extends Controller
 
     public function showbycategory($id)
     {
-        $product = Product::with('categories')->where('category_id',$id);
+        $product = Product::whereHas('categories', function($query) use ($id) {
+            $query->where('categories.id', $id);
+        })->with('categories')->get();
         
         if (!$product) {
             return $this->errorResponse('Product not found', 404);
