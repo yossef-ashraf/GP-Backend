@@ -17,7 +17,6 @@ class Product extends Model
         'stock',
         'sale_price',
         'type',
-        'category_id',
         'stock_status',
         'stock_qty',
         'slug',
@@ -40,11 +39,6 @@ class Product extends Model
     public function variations()
     {
         return $this->hasMany(ProductVariation::class);
-    }
-    
-    public function category()
-    {
-        return $this->belongsTo(Category::class);
     }
 
     public function cartItems()

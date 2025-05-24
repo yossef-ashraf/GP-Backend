@@ -53,10 +53,7 @@ class ProductResource extends Resource
                                     ->unique(ignoreRecord: true)
                                     ->maxLength(100)
                                     ->columnSpanFull(),
-                                    
-                                Forms\Components\Textarea::make('short_description')
-                                    ->columnSpanFull(),
-                                    
+            
                                 Forms\Components\RichEditor::make('description')
                                     ->columnSpanFull(),
                             ]),
@@ -107,7 +104,7 @@ class ProductResource extends Resource
                                     ->columnSpanFull(),
                             ]),
                             
-                        Forms\Components\Tabs\Tab::make('Images')
+                        Forms\Components\Tabs\Tab::make('Image')
                             ->schema([
                                 Forms\Components\FileUpload::make('image')
                                     ->image()
@@ -122,6 +119,10 @@ class ProductResource extends Resource
                                     ->relationship()
                                     ->schema([
                                         Forms\Components\TextInput::make('sku')
+                                            ->unique(ignoreRecord: true)
+                                            ->maxLength(100),
+
+                                            Forms\Components\TextInput::make('slug')
                                             ->unique(ignoreRecord: true)
                                             ->maxLength(100),
                                             

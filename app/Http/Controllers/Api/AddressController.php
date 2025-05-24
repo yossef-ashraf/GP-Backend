@@ -12,23 +12,13 @@ class AddressController extends Controller
 {
     use ApiResponseTrait;
 
-    /**
-     * Display a listing of addresses.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function index()
     {
-        $addresses = Address::with(['user', 'area'])->get();
+        $userId = auth()->id();
+        $addresses = Address::where('user_id', $userId)->with(['user', 'area'])->get();
         return $this->successResponse($addresses, 'Addresses retrieved successfully');
     }
 
-    /**
-     * Store a newly created address.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -49,12 +39,6 @@ class AddressController extends Controller
         return $this->successResponse($address, 'Address created successfully', 201);
     }
 
-    /**
-     * Display the specified address.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function show($id)
     {
         $address = Address::with(['user', 'area'])->find($id);
@@ -66,13 +50,6 @@ class AddressController extends Controller
         return $this->successResponse($address, 'Address retrieved successfully');
     }
 
-    /**
-     * Update the specified address.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function update(Request $request, $id)
     {
         $address = Address::find($id);
@@ -99,12 +76,6 @@ class AddressController extends Controller
         return $this->successResponse($address, 'Address updated successfully');
     }
 
-    /**
-     * Remove the specified address.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function destroy($id)
     {
         $address = Address::find($id);
@@ -117,15 +88,4 @@ class AddressController extends Controller
         return $this->successResponse(null, 'Address deleted successfully');
     }
 
-    /**
-     * Get addresses for a specific user.
-     *
-     * @param  int  $userId
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getUserAddresses($userId)
-    {
-        $addresses = Address::where('user_id', $userId)->with('area')->get();
-        return $this->successResponse($addresses, 'User addresses retrieved successfully');
-    }
 }

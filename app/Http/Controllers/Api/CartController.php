@@ -15,12 +15,6 @@ class CartController extends Controller
 {
     use ApiResponseTrait;
 
-    /**
-     * Get the current user's cart
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getCart(Request $request)
     {
         $user = $request->user();
@@ -37,12 +31,6 @@ class CartController extends Controller
         return $this->successResponse($cart, 'Cart retrieved successfully');
     }
 
-    /**
-     * Add item to cart
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function addItem(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -100,13 +88,6 @@ class CartController extends Controller
         );
     }
 
-    /**
-     * Update cart item quantity
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $itemId
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function updateItem(Request $request, $itemId)
     {
         $validator = Validator::make($request->all(), [
@@ -151,13 +132,6 @@ class CartController extends Controller
         );
     }
 
-    /**
-     * Remove item from cart
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $itemId
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function removeItem(Request $request, $itemId)
     {
         $user = $request->user();
@@ -187,12 +161,6 @@ class CartController extends Controller
         );
     }
 
-    /**
-     * Clear cart
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function clearCart(Request $request)
     {
         $user = $request->user();
@@ -214,12 +182,6 @@ class CartController extends Controller
         return $this->successResponse(null, 'Cart cleared successfully');
     }
 
-    /**
-     * Apply coupon to cart
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function applyCoupon(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -257,12 +219,6 @@ class CartController extends Controller
         );
     }
 
-    /**
-     * Remove coupon from cart
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function removeCoupon(Request $request)
     {
         $user = $request->user();

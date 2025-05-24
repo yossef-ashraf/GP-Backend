@@ -184,14 +184,13 @@ class DatabaseSeeder extends Seeder
                     ProductVariation::create([
                         'product_id' => $product->id,
                         'slug' => $product->slug . '-' . strtolower(str_replace(' ', '-', $name)),
-                        'regular_price' => $product->price + $data['price_modifier'],
+                        'price' => $product->price + $data['price_modifier'],
                         'sale_price' => $salePrice + $data['price_modifier'] * 0.9,
                         'sku' => $product->sku . '-' . $data['sku_suffix'],
-                        'manage_stock' => 'yes',
+                     
                         'stock_status' => $product->stock_status,
                         'stock_qty' => rand(5, 30),
-                        'total_sales' => 0,
-                        'backorder_limit' => rand(5, 10),
+
                     ]);
                 }
             }
@@ -249,7 +248,7 @@ class DatabaseSeeder extends Seeder
                     }
                     
                     $quantity = rand(1, 3);
-                    $price = $variation ? $variation->sale_price : $product->sale_price;
+                    $price = $variation ? $variation->price : $product->price;
                     $itemTotal = $price * $quantity;
 
                     OrderItem::create([

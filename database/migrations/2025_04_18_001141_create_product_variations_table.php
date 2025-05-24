@@ -12,13 +12,10 @@ class CreateProductvariationsTable extends Migration
             $table->id();
             $table->string('slug');
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->float('regular_price');
+            $table->float('price');
             $table->float('sale_price');
-            $table->string('manage_stock');
             $table->string('stock_status');
             $table->integer('stock_qty');
-            $table->integer('total_sales');
-            $table->integer('backorder_limit');
             $table->string('sku');
             $table->timestamps();        
             $table->softDeletes(); // This will add a deleted_at column for soft deletes
