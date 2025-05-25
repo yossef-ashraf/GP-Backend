@@ -22,7 +22,7 @@ class AddressController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'user_id' => 'required|exists:users,id',
+            // 'user_id' => 'required|exists:users,id',
             'area_id' => 'required|exists:areas,id',
             'state' => 'required|string|max:255',
             'zip_code' => 'required|string|max:255',
@@ -35,13 +35,17 @@ class AddressController extends Controller
             return $this->errorResponse($validator->errors()->first(), 422, $validator->errors());
         }
 
-        $address = Address::create($request->all());
+        $request = $request->all();
+        $request['user_id'] = auth()->id();
+        // dd($request->user_id);
+        $address = Address::create($request);
         return $this->successResponse($address, 'Address created successfully', 201);
     }
 
     public function show($id)
     {
-        $address = Address::with(['user', 'area'])->find($id);
+        $userId = auth()->id();
+        $address = Address::where('user_id', $userId)->with(['user', 'area'])->find($id);
         
         if (!$address) {
             return $this->errorResponse('Address not found', 404);

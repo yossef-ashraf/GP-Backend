@@ -35,18 +35,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/change-password', [AuthController::class, 'changePassword']);
 
     // Address Routes
-    Route::apiResource('addresses', AddressController::class)->except(['store']);
-    Route::post('addresses', [AddressController::class, 'store'])->middleware('can:create,App\Models\Address');
+    Route::apiResource('addresses', AddressController::class);
 
     // Cart Routes
     Route::prefix('cart')->group(function () {
-        Route::get('/', [CartController::class, 'getCart']);
-        Route::post('/add-item', [CartController::class, 'addItem']);
-        Route::put('/update-item/{itemId}', [CartController::class, 'updateItem']);
-        Route::delete('/remove-item/{itemId}', [CartController::class, 'removeItem']);
-        Route::delete('/clear', [CartController::class, 'clearCart']);
-        Route::post('/apply-coupon', [CartController::class, 'applyCoupon']);
-        Route::post('/remove-coupon', [CartController::class, 'removeCoupon']);
+        Route::get('/', [CartController::class, 'index']);
+        Route::post('/', [CartController::class, 'store']);
+        Route::put('/{id}', [CartController::class, 'update']);
+        Route::delete('/{id}', [CartController::class, 'destroy']);
+        Route::post('/clear', [CartController::class, 'clear']);
     });
 
     // Order Routes

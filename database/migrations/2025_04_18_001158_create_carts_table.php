@@ -11,9 +11,12 @@ class CreateCartsTable extends Migration
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Assuming you have a users table
-            $table->float('cart_total');
+            $table->foreignId('product_id')->constrained()->onDelete('cascade'); // Assuming you have a products table
+            $table->foreignId('variation_id')->nullable()->constrained('product_variations')->onDelete('cascade'); // Assuming you have a variations table
+            $table->float('total');
+            $table->integer('quantity');
             $table->timestamps();        
-            $table->softDeletes(); // This will add a deleted_at column for soft deletes
+            $table->softDeletes();
         });
     }
 

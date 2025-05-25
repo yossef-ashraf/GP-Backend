@@ -12,27 +12,15 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'address_id',
-        'shipping_method_id',
         'coupon_id',
         'order_number',
         'status',
         'subtotal',
-        'shipping_cost',
-        'discount',
-        'tax',
-        'total',
+        'total_amount',
         'payment_method',
-        'payment_status',
         'notes',
     ];
 
-    protected $casts = [
-        'subtotal' => 'float',
-        'shipping_cost' => 'float',
-        'discount' => 'float',
-        'tax' => 'float',
-        'total' => 'float',
-    ];
 
     public function user()
     {
@@ -47,10 +35,6 @@ class Order extends Model
     public function addresses()
     {
         return $this->address();
-    }
-    public function shippingMethod()
-    {
-        return $this->belongsTo(ShippingMethod::class);
     }
 
     public function coupon()

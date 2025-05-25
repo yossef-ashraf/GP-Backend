@@ -4,213 +4,215 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\ApiResponseTrait;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
 use App\Models\Cart;
-use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\Product;
 use App\Models\ShippingMethod;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use App\Models\Coupon;
 
 class OrderController extends Controller
 {
     use ApiResponseTrait;
 
-    /**
-     * Display a listing of the user's orders.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function index(Request $request)
     {
-        $user = $request->user();
-        $orders = Order::with(['items.product', 'address', 'shippingMethod', 'coupon'])
-            ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-            
+        $orders = $this->getUserOrders($request->user()->id);
         return $this->successResponse($orders, 'Orders retrieved successfully');
     }
 
-    /**
-     * Store a newly created order.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'address_id' => 'required|exists:addresses,id',
-            'shipping_method_id' => 'required|exists:shipping_methods,id',
-            'payment_method' => 'required|string|in:credit_card,paypal,cash_on_delivery',
-            'notes' => 'nullable|string',
+            'payment_method' => 'required|string|in:cash,credit_card',
+            'coupon_code' => 'nullable|string|exists:coupons,code',
+            'notes' => 'nullable|string|max:1000',
         ]);
 
         if ($validator->fails()) {
             return $this->errorResponse($validator->errors()->first(), 422, $validator->errors());
         }
 
-        $user = $request->user();
-        $cart = Cart::with('items.product')->where('user_id', $user->id)->first();
-        
-        if (!$cart || $cart->items->isEmpty()) {
-            return $this->errorResponse('Cart is empty', 422);
-        }
-        
-        // Check if all products are in stock
-        foreach ($cart->items as $item) {
-            if ($item->product->stock < $item->quantity) {
-                return $this->errorResponse("Product '{$item->product->name}' is out of stock or not enough quantity available", 422);
-            }
-        }
-        
-        $shippingMethod = ShippingMethod::findOrFail($request->shipping_method_id);
-        
         try {
-            DB::beginTransaction();
-            
-            // Create order
-            $order = Order::create([
-                'user_id' => $user->id,
-                'address_id' => $request->address_id,
-                'shipping_method_id' => $request->shipping_method_id,
-                'coupon_id' => $cart->coupon_id,
-                'order_number' => 'ORD-' . strtoupper(Str::random(10)),
-                'status' => 'pending',
-                'subtotal' => $cart->total + $cart->discount, // Pre-discount total
-                'shipping_cost' => $shippingMethod->price,
-                'discount' => $cart->discount,
-                'tax' => 0, // Can be calculated based on your tax rules
-                'total' => $cart->total + $shippingMethod->price,
-                'payment_method' => $request->payment_method,
-                'payment_status' => 'pending',
-                'notes' => $request->notes,
-            ]);
-            
-            // Create order items
-            foreach ($cart->items as $item) {
-                OrderItem::create([
-                    'order_id' => $order->id,
-                    'product_id' => $item->product_id,
-                    'quantity' => $item->quantity,
-                    'price' => $item->product->discount_price ?? $item->product->price,
-                    'total' => $item->quantity * ($item->product->discount_price ?? $item->product->price),
-                ]);
-                
-                // Reduce product stock
-                $product = $item->product;
-                $product->stock -= $item->quantity;
-                $product->save();
-            }
-            
-            // Recalculate order total
-            $order->calculateTotal();
-            
-            // Increment coupon usage if used
-            if ($cart->coupon_id) {
-                $coupon = $cart->coupon;
-                $coupon->usage_count += 1;
-                $coupon->save();
-            }
-            
-            // Clear the cart
-            CartItem::where('cart_id', $cart->id)->delete();
-            $cart->total = 0;
-            $cart->discount = 0;
-            $cart->coupon_id = null;
-            $cart->save();
-            
-            DB::commit();
-            
-            return $this->successResponse(
-                Order::with(['items.product', 'address', 'shippingMethod', 'coupon'])->find($order->id),
-                'Order created successfully',
-                201
-            );
+            $order = $this->createOrder($request->user()->id, $request->all());
+            return $this->successResponse($order, 'Order created successfully', 201);
         } catch (\Exception $e) {
-            DB::rollBack();
             return $this->errorResponse('Failed to create order: ' . $e->getMessage(), 500);
         }
     }
 
-    /**
-     * Display the specified order.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function show(Request $request, $id)
     {
-        $user = $request->user();
-        $order = Order::with(['items.product', 'address', 'shippingMethod', 'coupon'])
-            ->where('user_id', $user->id)
-            ->where('id', $id)
-            ->first();
-            
-        if (!$order) {
-            return $this->errorResponse('Order not found', 404);
+        try {
+            $order = $this->getOrder(auth()->id(), $id);
+            return $this->successResponse($order, 'Order retrieved successfully');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 404);
         }
-        
-        return $this->successResponse($order, 'Order retrieved successfully');
     }
 
-    /**
-     * Cancel an order.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function cancel(Request $request, $id)
     {
-        $user = $request->user();
-        $order = Order::with('items.product')
-            ->where('user_id', $user->id)
-            ->where('id', $id)
-            ->first();
-            
-        if (!$order) {
-            return $this->errorResponse('Order not found', 404);
-        }
-        
-        // Check if order can be canceled
-        if (!in_array($order->status, ['pending', 'processing'])) {
-            return $this->errorResponse('Order cannot be canceled', 422);
-        }
-        
         try {
-            DB::beginTransaction();
-            
-            // Update order status
-            $order->status = 'canceled';
-            $order->save();
-            
-            // Restore product stock
-            foreach ($order->items as $item) {
-                $product = $item->product;
-                $product->stock += $item->quantity;
-                $product->save();
-            }
-            
-            // Decrement coupon usage if used
-            if ($order->coupon_id) {
-                $coupon = $order->coupon;
-                $coupon->usage_count -= 1;
-                $coupon->save();
-            }
-            
-            DB::commit();
-            
+            $order = $this->cancelOrder($request->user()->id, $id);
             return $this->successResponse($order, 'Order canceled successfully');
         } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 422);
+        }
+    }
+
+    public function getUserOrders($userId)
+    {
+        return Order::with(['items.product', 'items.variation', 'address', 'coupon'])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    }
+
+    public function getOrder($userId, $orderId)
+    {
+        // dump($userId , $orderId);
+        $order = Order::with(['items.product', 'items.variation', 'address', 'coupon'])
+            ->where('user_id', $userId)
+            ->where('id', (int) $orderId)
+            ->first();
+
+        if (!$order) {
+            throw new \Exception('Order not found');
+        }
+
+        return $order;
+    }
+
+    public function createOrder($userId, array $data)
+    {
+        $cartItems = Cart::where('user_id', $userId)->with(['product', 'variation'])->get();
+        if ($cartItems->isEmpty()) {
+            throw new \Exception('Cart is empty');
+        }
+
+        $coupon = null;
+        if (isset($data['coupon_code'])) {
+            $coupon = Coupon::where('code', $data['coupon_code'])->first();
+            if (!$coupon || !$coupon->is_active ||
+                ($coupon->valid_from && $coupon->valid_from->isFuture()) ||
+                ($coupon->valid_to && $coupon->valid_to->isPast()) ||
+                ($coupon->usage_limit && $coupon->usage_count >= $coupon->usage_limit)) {
+                throw new \Exception('Invalid or expired coupon');
+            }
+        }
+
+        foreach ($cartItems as $item) {
+            if ($item->variation_id) {
+                $variation = $item->variation()->lockForUpdate()->first();
+                if (!$variation || $variation->stock_qty < $item->quantity) {
+                    throw new \Exception("Product variation '{$variation->sku}' is out of stock or insufficient quantity");
+                }
+            } else {
+                $product = $item->product()->lockForUpdate()->first();
+                if (!$product || $product->stock_qty < $item->quantity) {
+                    throw new \Exception("Product '{$product->name}' is out of stock or insufficient quantity");
+                }
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $subtotal = $cartItems->sum(function ($item) {
+                $price = $item->variation_id ? ($item->variation->sale_price ?? $item->variation->price) : ($item->product->discount_price ?? $item->product->price);
+                return $item->quantity * $price;
+            });
+
+            $discount = 0;
+            if ($coupon) {
+                $discount = $coupon->discount_type === 'percentage'
+                    ? $subtotal * ($coupon->discount_value / 100)
+                    : $coupon->discount_value;
+
+                $discount = min($discount, $subtotal);
+                $subtotal -= $discount;
+            }
+
+            $order = Order::create([
+                'user_id' => $userId,
+                'address_id' => $data['address_id'],
+                'coupon_id' => $coupon?->id,
+                'tracking_number' => 'ORD-' . strtoupper(Str::random(10)),
+                'total_amount' => $subtotal,
+                'payment_method' => $data['payment_method'],
+                'status' => $data['payment_method'] === 'cash' ? 'pending' : 'pre-pay',
+                'notes' => $data['notes'] ?? null,
+            ]);
+
+            foreach ($cartItems as $item) {
+                $price = $item->variation_id ? ($item->variation->sale_price ?? $item->variation->price) : ($item->product->sale_price ?? $item->product->price);
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'product_id' => $item->product_id,
+                    'variation_id' => $item->variation_id,
+                    'quantity' => $item->quantity,
+                    'price' => $price,
+                    'total_amount' => $item->quantity * $price,
+                    'variation_data' => $item->variation_id ? $item->variation->variation_data : null,
+                ]);
+
+                if ($item->variation_id) {
+                    $item->variation->decrement('stock_qty', $item->quantity);
+                } else {
+                    $item->product->decrement('stock_qty', $item->quantity);
+                }
+            }
+
+            Cart::where('user_id', $userId)->delete();
+
+            DB::commit();
+            return Order::with(['address', 'coupon'])->find($order->id);
+        } catch (\Exception $e) {
             DB::rollBack();
-            return $this->errorResponse('Failed to cancel order: ' . $e->getMessage(), 500);
+            throw $e;
+        }
+    }
+
+    public function cancelOrder($userId, $orderId)
+    {
+        $order = Order::with(['items.product', 'items.variation'])
+            ->where('user_id', $userId)
+            ->where('id', $orderId)
+            ->first();
+
+        if (!$order) {
+            throw new \Exception('Order not found');
+        }
+
+        if (!in_array($order->status, ['pending', 'processing'])) {
+            throw new \Exception('Order cannot be canceled');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $order->status = 'canceled';
+            $order->save();
+
+            foreach ($order->items as $item) {
+                if ($item->variation_id) {
+                    $item->variation->increment('stock_qty', $item->quantity);
+                } else {
+                    $item->product->increment('stock_qty', $item->quantity);
+                }
+            }
+
+            DB::commit();
+            return $order;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
         }
     }
 }
