@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'password' => Hash::make('123'),
             'name' => 'admin',
+            'role' => 'admin' ,
             'email' => 'admin@admin.com'
         ]);
 
@@ -81,7 +82,8 @@ class DatabaseSeeder extends Seeder
         ];
         
         foreach ($categoryNames as $data) {
-            $categories[] = Category::create(['data' => $data]);
+            $categories[] = Category::create(['data' => $data,
+            'image' => 'categories/01JW7CB5N15KFYXNEKB85PMZ9S.jpeg',]);
         }
 
         // 7. Create subcategories
@@ -100,6 +102,7 @@ class DatabaseSeeder extends Seeder
             $parent = $categoryMap[$parentName];
             foreach ($subNames as $subName) {
                 Category::create([
+                    'image' => 'categories/01JW7CB5N15KFYXNEKB85PMZ9S.jpeg',
                     'parent_id' => $parent->id,
                     'data' => $subName
                 ]);
@@ -147,6 +150,8 @@ class DatabaseSeeder extends Seeder
             $salePrice = rand(80, 100) / 100 * $price; // 80-100% of original price
             
             $product = Product::create([
+                'image' => 'products/01JW7C8KW3PTSPCC5TMY2QH8YR.jpeg',
+                'author' => 'author-' . ($index + 1),
                 'slug' => 'book-' . ($index + 1),
                 'type' => 'simple', // معظم الكتب بسيطة وليست متغيرة
                 'sku' => 'BOOK-' . rand(1000, 9999),
@@ -225,10 +230,14 @@ class DatabaseSeeder extends Seeder
             for ($i = 1; $i <= rand(1, 3); $i++) {
                 // اختيار كوبون عشوائي أحيانًا
                 $couponId = rand(0, 10) > 7 ? Coupon::inRandomOrder()->first()?->id : null;
-                
+                $area_id = Area::inRandomOrder()->first();
                 $order = Order::create([
                     'user_id' => $user->id,
-                    'address_id' => $user->addresses->first()->id,
+                    'area_id'=>$area_id->id,
+                    'notes' => 'Order Note',
+                    'tracking_number' => 'tracking_number-'.$user->id.'-'.rand(41,144),
+                    'shipping_cost'=>$area_id->shippingValues()->first()->value ?? 5,
+                    'address' => 'address-'.$user->id,
                     'coupon_id' => $couponId,
                     'payment_method' => ['cash', 'credit_card'][rand(0, 1)],
                     'status' => ['pre-pay', 'pending', 'completed', 'cancelled', 'payed'][rand(0, 4)],

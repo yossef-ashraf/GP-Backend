@@ -20,12 +20,22 @@ class Product extends Model
         'stock_status',
         'stock_qty',
         'slug',
+        'author',
         'image',
         'is_active',
         'sku',
         'weight',
         'dimensions',
     ];
+
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image
+            ? asset('storage/' . $this->image)
+            : null;
+    }
 
     // protected $casts = [
     //     'price' => 'float',
@@ -41,10 +51,10 @@ class Product extends Model
         return $this->hasMany(ProductVariation::class);
     }
 
-    public function cartItems()
-    {
-        return $this->hasMany(CartItem::class);
-    }
+    // public function cartItems()
+    // {
+    //     return $this->hasMany(CartItem::class);
+    // }
 
     public function orderItems()
     {

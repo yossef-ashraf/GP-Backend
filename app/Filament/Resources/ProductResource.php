@@ -39,7 +39,11 @@ class ProductResource extends Resource
                                     ->maxLength(255)
                                     ->unique(ignoreRecord: true)
                                     ->columnSpanFull(),
-                                    
+                                
+                                Forms\Components\TextInput::make('author')
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
+                                
                                 Forms\Components\Select::make('type')
                                     ->options([
                                         'simple' => 'Simple Product',
@@ -48,12 +52,12 @@ class ProductResource extends Resource
                                     ->required()
                                     ->live()
                                     ->columnSpanFull(),
-                                    
+                                
                                 Forms\Components\TextInput::make('sku')
                                     ->unique(ignoreRecord: true)
                                     ->maxLength(100)
                                     ->columnSpanFull(),
-            
+
                                 Forms\Components\RichEditor::make('description')
                                     ->columnSpanFull(),
                             ]),

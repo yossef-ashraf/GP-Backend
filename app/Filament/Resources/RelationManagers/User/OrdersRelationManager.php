@@ -21,9 +21,10 @@ class OrdersRelationManager extends RelationManager
                 Forms\Components\Select::make('coupon_id')
                     ->relationship('coupon', 'code')
                     ->nullable(),
-                Forms\Components\Select::make('address_id')
-                    ->relationship('address', 'street')
-                    ->required(),
+                Forms\Components\Textarea::make('address')
+                    ->label('Address')
+                    ->required()
+                    ->rows(3),                
                 Forms\Components\Select::make('payment_method')
                     ->options([
                         'cash' => 'Cash',

@@ -28,8 +28,9 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'address_id' => 'required|exists:addresses,id',
             'payment_method' => 'required|string|in:cash,credit_card',
+            'address' => 'required|string',
+            'area_id' => 'required|exists:areas,id',
             'coupon_code' => 'nullable|string|exists:coupons,code',
             'notes' => 'nullable|string|max:1000',
         ]);
@@ -68,7 +69,7 @@ class OrderController extends Controller
 
     public function getUserOrders($userId)
     {
-        return Order::with(['items.product', 'items.variation', 'address', 'coupon'])
+        return Order::with(['items.product', 'items.variation', 'coupon'])
             ->where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -77,7 +78,7 @@ class OrderController extends Controller
     public function getOrder($userId, $orderId)
     {
         // dump($userId , $orderId);
-        $order = Order::with(['items.product', 'items.variation', 'address', 'coupon'])
+        $order = Order::with(['items.product', 'items.variation', 'coupon'])
             ->where('user_id', $userId)
             ->where('id', (int) $orderId)
             ->first();
@@ -95,6 +96,10 @@ class OrderController extends Controller
         if ($cartItems->isEmpty()) {
             throw new \Exception('Cart is empty');
         }
+
+        // Calculate shipping cost based on area
+        $shippingValue = \App\Models\ShippingValue::where('area_id', $data['area_id'])->first();
+        $shippingCost = $shippingValue ? $shippingValue->value : 0;
 
         $coupon = null;
         if (isset($data['coupon_code'])) {
@@ -141,10 +146,12 @@ class OrderController extends Controller
 
             $order = Order::create([
                 'user_id' => $userId,
-                'address_id' => $data['address_id'],
+                'address' => $data['address'],
                 'coupon_id' => $coupon?->id,
                 'tracking_number' => 'ORD-' . strtoupper(Str::random(10)),
                 'total_amount' => $subtotal,
+                'area_id' => $data['area_id'],
+                'shipping_cost' => $shippingCost,
                 'payment_method' => $data['payment_method'],
                 'status' => $data['payment_method'] === 'cash' ? 'pending' : 'pre-pay',
                 'notes' => $data['notes'] ?? null,
@@ -172,7 +179,7 @@ class OrderController extends Controller
             Cart::where('user_id', $userId)->delete();
 
             DB::commit();
-            return Order::with(['address', 'coupon'])->find($order->id);
+            return Order::with(['area', 'coupon'])->find($order->id);
         } catch (\Exception $e) {
             DB::rollBack();
             throw $e;

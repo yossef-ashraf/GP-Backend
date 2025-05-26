@@ -44,7 +44,15 @@ class UserResource extends Resource
                         'female' => 'Female',
                         'other' => 'Other'
                     ]),
-                Forms\Components\DatePicker::make('date_of_birth')
+                Forms\Components\DatePicker::make('date_of_birth'),
+                Forms\Components\Select::make('role')
+                    ->options([
+                        'user' => 'User',
+                        'admin' => 'Admin',
+                        'moderator' => 'Moderator'
+                    ])
+                    ->default('user')
+                    ->required(),
             ])->columns(1);
     }
 
@@ -64,6 +72,14 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('gender')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('role')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'admin' => 'danger',
+                        'moderator' => 'warning',
+                        'user' => 'success',
+                    })
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

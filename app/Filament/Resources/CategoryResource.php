@@ -41,6 +41,11 @@ class CategoryResource extends Resource
                     ->maxLength(255)
                     ->columnSpanFull(),
                     
+                Forms\Components\FileUpload::make('image')
+                    ->image()
+                    ->directory('categories')
+                    ->nullable()
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -52,6 +57,10 @@ class CategoryResource extends Resource
                     ->numeric()
                     ->sortable(),
                     
+                Tables\Columns\ImageColumn::make('image')
+                    ->circular()
+                    ->defaultImageUrl(url('/images/placeholder.png')),
+                    
                 Tables\Columns\TextColumn::make('data')
                     ->searchable()
                     ->sortable(),
@@ -61,7 +70,6 @@ class CategoryResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->toggleable(),
-                    
                     
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()

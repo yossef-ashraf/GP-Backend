@@ -37,17 +37,39 @@ class OrderResource extends Resource
                             ->searchable()
                             ->preload(),
                             
+                        Forms\Components\Select::make('area_id')
+                            ->relationship('area', 'name')
+                            ->required()
+                            ->searchable()
+                            ->preload()
+                            ->disabled()
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, callable $set) {
+                                if ($state) {
+                                    $shippingValue = \App\Models\ShippingValue::where('area_id', $state)->first();
+                                    $set('shipping_cost', $shippingValue ? $shippingValue->value : 0);
+                                }
+                            }),
+                            
+                        Forms\Components\TextInput::make('shipping_cost')
+                            ->numeric()
+                            ->required()
+                            ->disabled()
+                            ->prefix(config('settings.currency_symbol', '$')),
+                            
                         Forms\Components\Select::make('coupon_id')
                             ->relationship('coupon', 'code')
                             ->searchable()
+                            ->disabled()
                             ->preload()
                             ->nullable(),
                             
-                        Forms\Components\Select::make('address_id')
-                            ->relationship('address', 'street')
+                            Forms\Components\Textarea::make('address')
+                            ->label('Address')
                             ->required()
-                            ->searchable()
-                            ->preload(),
+                            
+                            ->rows(3),
+                        
                             
                         Forms\Components\Select::make('payment_method')
                             ->options([
@@ -91,6 +113,15 @@ class OrderResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Customer')
                     ->searchable()
+                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('area.name')
+                    ->label('Area')
+                    ->searchable()
+                    ->sortable(),
+                    
+                Tables\Columns\TextColumn::make('shipping_cost')
+                    ->money()
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('total_amount')
@@ -151,11 +182,11 @@ class OrderResource extends Resource
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                // Tables\Actions\BulkActionGroup::make([
+                    // Tables\Actions\DeleteBulkAction::make(),
                     // Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
-                ]),
+                    // Tables\Actions\RestoreBulkAction::make(),
+                // ]),
             ])
             ->defaultSort('created_at', 'desc')
             ->groups([
@@ -178,7 +209,7 @@ class OrderResource extends Resource
                             ->label('Coupon')
                             ->placeholder('No coupon used'),
                             
-                        Components\TextEntry::make('address.street')
+                            Components\TextEntry::make('address')
                             ->label('Address'),
                             
                         Components\TextEntry::make('payment_method')

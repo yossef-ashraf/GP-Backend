@@ -10,7 +10,10 @@ class Category extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['parent_id', 'data'];
+    protected $fillable = ['parent_id', 'data', 'image'];
+
+    // Appended attributes
+    protected $appends = ['image_url', 'items_count'];
 
     public function products()
     {
@@ -25,5 +28,19 @@ class Category extends Model
     public function children()
     {
         return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    // Accessor for image_url
+    public function getImageUrlAttribute()
+    {
+        return $this->image
+            ? asset('storage/' . $this->image)
+            : null;
+    }
+
+    // Accessor for items_count
+    public function getItemsCountAttribute()
+    {
+        return $this->products()->count();
     }
 }
