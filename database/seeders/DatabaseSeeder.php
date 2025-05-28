@@ -150,7 +150,7 @@ class DatabaseSeeder extends Seeder
             $salePrice = rand(80, 100) / 100 * $price; // 80-100% of original price
             
             $product = Product::create([
-                'image' => 'products/01JW7C8KW3PTSPCC5TMY2QH8YR.jpeg',
+                'image' => 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=1000',
                 'author' => 'author-' . ($index + 1),
                 'slug' => 'book-' . ($index + 1),
                 'type' => 'simple', // معظم الكتب بسيطة وليست متغيرة
