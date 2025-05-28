@@ -75,16 +75,16 @@ class CouponController extends Controller
         
         // Calculate discount
         $discount = 0;
-        if ($coupon->type === 'fixed') {
-            $discount = $coupon->value;
+        if ($coupon->discount_type === 'fixed') {
+            $discount = $coupon->discount_value;
         } else { // percentage
-            $discount = ($request->order_amount * $coupon->value) / 100;
+            $discount = ($request->order_amount * $coupon->discount_value) / 100;
         }
         
         return $this->successResponse([
             'coupon' => $coupon,
             'discount' => $discount,
-            'final_amount' => max(0, $request->order_amount - $discount)
+            'final_amount' => round( max(0, $request->order_amount - $discount))
         ], 'Coupon is valid');
     }
 
