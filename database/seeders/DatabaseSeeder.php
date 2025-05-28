@@ -83,7 +83,7 @@ class DatabaseSeeder extends Seeder
         
         foreach ($categoryNames as $data) {
             $categories[] = Category::create(['data' => $data,
-            'image' => 'categories/01JW7CB5N15KFYXNEKB85PMZ9S.jpeg',]);
+            'image' => 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2030&auto=format&fit=crop',]);
         }
 
         // 7. Create subcategories
@@ -102,7 +102,7 @@ class DatabaseSeeder extends Seeder
             $parent = $categoryMap[$parentName];
             foreach ($subNames as $subName) {
                 Category::create([
-                    'image' => 'categories/01JW7CB5N15KFYXNEKB85PMZ9S.jpeg',
+                    'image' => 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2030&auto=format&fit=crop',
                     'parent_id' => $parent->id,
                     'data' => $subName
                 ]);
