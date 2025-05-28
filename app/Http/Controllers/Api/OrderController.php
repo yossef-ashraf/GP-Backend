@@ -204,7 +204,7 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
-            $order->status = 'canceled';
+            $order->status = 'cancelled';
             $order->save();
 
             foreach ($order->items as $item) {
