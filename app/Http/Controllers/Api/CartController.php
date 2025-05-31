@@ -21,20 +21,40 @@ class CartController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'product_id' => 'required|exists:products,id',
-            'variation_id' => 'nullable|exists:product_variations,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
+{
+    $validator = Validator::make($request->all(), [
+        'product_id' => 'required|exists:products,id',
+        'variation_id' => 'nullable|exists:product_variations,id',
+        'quantity' => 'required|integer|min:1',
+    ]);
 
-        if ($validator->fails()) {
-            return $this->errorResponse($validator->errors()->first(), 422);
+    if ($validator->fails()) {
+        return $this->errorResponse($validator->errors()->first(), 422);
+    }
+
+    $user = $request->user();
+    $product = Product::findOrFail($request->product_id);
+
+    // Look for existing cart item with same user, product, and variation
+    $existingCartItem = Cart::where('user_id', $user->id)
+        ->where('product_id', $product->id)
+        ->where('variation_id', $request->variation_id)
+        ->first();
+
+    if ($existingCartItem) {
+        // Check stock availability
+        $newQuantity = $existingCartItem->quantity + $request->quantity;
+        if ($product->stock_qty < $newQuantity) {
+            return $this->errorResponse('Product is out of stock', 422);
         }
 
-        $user = $request->user();
-        $product = Product::findOrFail($request->product_id);
+        // Update quantity
+        $existingCartItem->quantity = $newQuantity;
+        $existingCartItem->save();
 
+        return $this->successResponse($existingCartItem->load(['product', 'variation']), 'Cart item quantity updated');
+    } else {
+        // New item
         if ($product->stock_qty < $request->quantity) {
             return $this->errorResponse('Product is out of stock', 422);
         }
@@ -47,9 +67,10 @@ class CartController extends Controller
             'total' => 0,
         ]);
 
-
         return $this->successResponse($cart->load(['product', 'variation']), 'Cart item added successfully');
     }
+}
+
 
     public function update(Request $request, $id)
     {
