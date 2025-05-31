@@ -37,47 +37,126 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('image')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('author')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('slug')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Select::make('type')
-                    ->options([
-                        'simple' => 'Simple',
-                        'variable' => 'Variable',
-                    ])
-                    ->required(),
-                Forms\Components\TextInput::make('sku')
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('price')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
-                Forms\Components\TextInput::make('sale_price')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
-                Forms\Components\Select::make('stock_status')
-                    ->options([
-                        'in_stock' => 'In Stock',
-                        'out_of_stock' => 'Out of Stock',
-                    ])
-                    ->required(),
-                Forms\Components\TextInput::make('stock_qty')
-                    ->required()
-                    ->numeric()
-                    ->default(0),
-                Forms\Components\Select::make('categories')
-                    ->relationship('categories', 'data')
-                    ->multiple()
-                    ->preload()
-                    ->searchable(),
+                Forms\Components\Tabs::make('Product Details')
+                    ->tabs([
+                        Forms\Components\Tabs\Tab::make('General')
+                            ->schema([
+                                Forms\Components\TextInput::make('slug')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->unique(ignoreRecord: true)
+                                    ->columnSpanFull(),
+                                
+                                Forms\Components\TextInput::make('author')
+                                    ->maxLength(255)
+                                    ->columnSpanFull(),
+                                
+                                Forms\Components\Select::make('type')
+                                    ->options([
+                                        'simple' => 'Simple Product',
+                                        'variable' => 'Variable Product',
+                                    ])
+                                    ->required()
+                                    ->live()
+                                    ->columnSpanFull(),
+                                
+                                Forms\Components\TextInput::make('sku')
+                                    ->unique(ignoreRecord: true)
+                                    ->maxLength(100)
+                                    ->columnSpanFull(),
+
+                                Forms\Components\RichEditor::make('description')
+                                    ->columnSpanFull(),
+                            ]),
+                            
+                        Forms\Components\Tabs\Tab::make('Pricing')
+                            ->schema([
+                                Forms\Components\TextInput::make('price')
+                                    ->numeric()
+                                    ->required()
+                                    ->prefix(config('settings.currency_symbol', '$')),
+                                    
+                                Forms\Components\TextInput::make('sale_price')
+                                    ->numeric()
+                                    ->prefix(config('settings.currency_symbol', '$'))
+                                    ->lt('price'),
+                                    
+                                Forms\Components\Toggle::make('sold_individually')
+                                    ->label('Sold individually')
+                                    ->default(false),
+                            ])->columns(3),
+                            
+                        Forms\Components\Tabs\Tab::make('Inventory')
+                            ->schema([
+                                Forms\Components\Select::make('stock_status')
+                                    ->options([
+                                        'in_stock' => 'In Stock',
+                                        'out_of_stock' => 'Out of Stock',
+                                        'on_backorder' => 'On Backorder',
+                                    ])
+                                    ->required(),
+                                    
+                                Forms\Components\TextInput::make('stock_qty')
+                                    ->numeric()
+                                    ->minValue(0),
+                                    
+                                Forms\Components\Toggle::make('manage_stock')
+                                    ->label('Manage stock?')
+                                    ->live(),
+                            ])->columns(3),
+                            
+                        Forms\Components\Tabs\Tab::make('Categories')
+                            ->schema([
+                                Forms\Components\Select::make('categories')
+                                    ->relationship('categories', 'data')
+                                    ->multiple()
+                                    ->preload()
+                                    ->searchable()
+                                    ->columnSpanFull(),
+                            ]),
+                            
+                        Forms\Components\Tabs\Tab::make('Image')
+                            ->schema([
+                                Forms\Components\FileUpload::make('image')
+                                    ->image()
+                                    ->directory('products')
+                                    ->columnSpanFull(),
+                            ]),
+                            
+                        Forms\Components\Tabs\Tab::make('Variations')
+                            ->visible(fn ($get) => $get('type') === 'variable')
+                            ->schema([
+                                Forms\Components\Repeater::make('variations')
+                                    ->relationship()
+                                    ->schema([
+                                        Forms\Components\TextInput::make('sku')
+                                            ->unique(ignoreRecord: true)
+                                            ->maxLength(100),
+
+                                        Forms\Components\TextInput::make('slug')
+                                            ->unique(ignoreRecord: true)
+                                            ->maxLength(100),
+                                            
+                                        Forms\Components\TextInput::make('price')
+                                            ->numeric()
+                                            ->required(),
+                                            
+                                        Forms\Components\TextInput::make('sale_price')
+                                            ->numeric(),
+                                            
+                                        Forms\Components\TextInput::make('stock_qty')
+                                            ->numeric()
+                                            ->minValue(0),
+                                            
+                                        Forms\Components\Select::make('stock_status')
+                                            ->options([
+                                                'in_stock' => 'In Stock',
+                                                'out_of_stock' => 'Out of Stock',
+                                                'on_backorder' => 'On Backorder',
+                                            ]),
+                                    ]),
+                            ]),
+                    ])->columnSpanFull(),
             ]);
     }
 
@@ -114,6 +193,7 @@ class ProductResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'in_stock' => 'success',
                         'out_of_stock' => 'danger',
+                        'on_backorder' => 'warning',
                     }),
                 Tables\Columns\TextColumn::make('stock_qty')
                     ->numeric()
@@ -142,6 +222,7 @@ class ProductResource extends Resource
                     ->options([
                         'in_stock' => 'In Stock',
                         'out_of_stock' => 'Out of Stock',
+                        'on_backorder' => 'On Backorder',
                     ])
                     ->multiple()
                     ->searchable(),

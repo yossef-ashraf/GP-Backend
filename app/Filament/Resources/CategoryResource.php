@@ -41,9 +41,11 @@ class CategoryResource extends Resource
                     ->required()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
-                Forms\Components\TextInput::make('image')
-                    ->required()
-                    ->maxLength(255),
+                    Forms\Components\FileUpload::make('image')
+                    ->image()
+                    ->directory('categories')
+                    ->nullable()
+                    ->columnSpanFull(),
             ]);
     }
 

@@ -82,7 +82,7 @@ class DatabaseSeeder extends Seeder
         foreach ($categoryNames as $data) {
             $categories[] = Category::create([
                 'data' => $data,
-                'image' => 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2030&auto=format&fit=crop',
+                'image' => 'categories/01JW7CB5N15KFYXNEKB85PMZ9S.jpeg'//'https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=2030&auto=format&fit=crop',
             ]);
         }
 
@@ -127,7 +127,7 @@ class DatabaseSeeder extends Seeder
             $salePrice = rand(80, 100) / 100 * $price;
             
             $product = Product::create([
-                'image' => 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=1000',
+                'image' => 'products/01JW7C8KW3PTSPCC5TMY2QH8YR.jpeg',//'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?q=80&w=1000',
                 'author' => $authors[$index % count($authors)],
                 'slug' => 'book-' . ($index + 1),
                 'type' => 'simple',
