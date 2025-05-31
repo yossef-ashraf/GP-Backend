@@ -12,6 +12,15 @@ class Area extends Model
 
     protected $fillable = ['name'];
 
+    protected $appends = ['shipping_value'];
+
+    // Accessor for shipping_value
+    public function getShippingValueAttribute()
+    {
+        // Assuming you want the latest shipping value
+        return $this->shippingValues()->latest()->value('value');
+    }
+
     public function shippingValues()
     {
         return $this->hasMany(ShippingValue::class);
