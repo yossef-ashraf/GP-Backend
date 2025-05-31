@@ -12,6 +12,10 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\TernaryFilter;
 
 class OrderResource extends Resource
 {
@@ -24,6 +28,10 @@ class OrderResource extends Resource
     protected static ?string $navigationLabel = 'Orders';
 
     protected static ?string $recordTitleAttribute = 'id';
+
+    protected static ?string $navigationGroup = 'Orders Management';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -107,18 +115,16 @@ class OrderResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                     
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('Customer')
-                    ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                     
                 Tables\Columns\TextColumn::make('area.name')
-                    ->label('Area')
-                    ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                     
                 Tables\Columns\TextColumn::make('shipping_cost')
                     ->money()
@@ -151,7 +157,13 @@ class OrderResource extends Resource
                     
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                    
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                     
                 Tables\Columns\TextColumn::make('items_count')
                     ->counts('items')
@@ -160,33 +172,74 @@ class OrderResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                // Tables\Filters\TrashedFilter::make(),
-                Tables\Filters\SelectFilter::make('status')
+                SelectFilter::make('status')
                     ->options([
-                        'pre-pay' => 'Pre-Pay',
+                        'pre-pay' => 'Pre Pay',
                         'pending' => 'Pending',
                         'completed' => 'Completed',
                         'cancelled' => 'Cancelled',
                         'payed' => 'Payed',
-                    ]),
-                Tables\Filters\SelectFilter::make('payment_method')
+                    ])
+                    ->multiple()
+                    ->searchable(),
+                SelectFilter::make('payment_method')
                     ->options([
                         'cash' => 'Cash',
                         'credit_card' => 'Credit Card',
                         'paypal' => 'PayPal',
-                    ]),
+                    ])
+                    ->multiple()
+                    ->searchable(),
+                SelectFilter::make('area')
+                    ->relationship('area', 'name')
+                    ->multiple()
+                    ->searchable()
+                    ->preload(),
+                Filter::make('created_at')
+                    ->form([
+                        DatePicker::make('created_from'),
+                        DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    }),
+                Filter::make('total_amount')
+                    ->form([
+                        Forms\Components\TextInput::make('min_amount')
+                            ->numeric()
+                            ->placeholder('Min Amount'),
+                        Forms\Components\TextInput::make('max_amount')
+                            ->numeric()
+                            ->placeholder('Max Amount'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_amount'],
+                                fn (Builder $query, $amount): Builder => $query->where('total_amount', '>=', $amount),
+                            )
+                            ->when(
+                                $data['max_amount'],
+                                fn (Builder $query, $amount): Builder => $query->where('total_amount', '<=', $amount),
+                            );
+                    }),
             ])
             ->actions([
-                //Tables\Actions\ViewAction::make(),
-                // Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                // Tables\Actions\BulkActionGroup::make([
-                    // Tables\Actions\DeleteBulkAction::make(),
-                    // Tables\Actions\ForceDeleteBulkAction::make(),
-                    // Tables\Actions\RestoreBulkAction::make(),
-                // ]),
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
             ])
             ->defaultSort('created_at', 'desc')
             ->groups([
@@ -297,7 +350,6 @@ class OrderResource extends Resource
         return [
             'index' => Pages\Order\ListOrder::route('/'),
             'create' => Pages\Order\CreateOrder::route('/create'),
-            //'view' => Pages\Order\ViewOrder::route('/{record}'),
             'edit' => Pages\Order\EditOrder::route('/{record}/edit'),
         ];
     }

@@ -12,12 +12,20 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\TernaryFilter;
 
 class AreaResource extends Resource
 {
     protected static ?string $model = Area::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-map';
+
+    protected static ?string $navigationGroup = 'Shipping Management';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'Area';
 
@@ -32,7 +40,7 @@ class AreaResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255)
-                    ->columnSpanFull(),
+                    ->unique(ignoreRecord: true),
             ]);
     }
 
@@ -41,15 +49,11 @@ class AreaResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('shippingValues.value')
-                    ->label('Shipping Value')
-                    ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -59,22 +63,16 @@ class AreaResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->filters([
-                Tables\Filters\TrashedFilter::make(),
-            ])
+
             ->actions([
-                //Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
-            ])
-            ->defaultSort('id', 'desc');
+            ]);
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -101,12 +99,17 @@ class AreaResource extends Resource
             ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
             'index' => Pages\Area\ListArea::route('/'),
             'create' => Pages\Area\CreateArea::route('/create'),
-            //'view' => Pages\Area\ViewArea::route('/{record}'),
             'edit' => Pages\Area\EditArea::route('/{record}/edit'),
         ];
     }

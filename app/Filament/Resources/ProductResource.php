@@ -12,12 +12,20 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\TernaryFilter;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
+
+    protected static ?string $navigationGroup = 'Products Management';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'Product';
 
@@ -29,130 +37,47 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Tabs::make('Product Details')
-                    ->tabs([
-                        Forms\Components\Tabs\Tab::make('General')
-                            ->schema([
-                                    
-                                Forms\Components\TextInput::make('slug')
-                                    ->required()
-                                    ->maxLength(255)
-                                    ->unique(ignoreRecord: true)
-                                    ->columnSpanFull(),
-                                
-                                Forms\Components\TextInput::make('author')
-                                    ->maxLength(255)
-                                    ->columnSpanFull(),
-                                
-                                Forms\Components\Select::make('type')
-                                    ->options([
-                                        'simple' => 'Simple Product',
-                                        'variable' => 'Variable Product',
-                                    ])
-                                    ->required()
-                                    ->live()
-                                    ->columnSpanFull(),
-                                
-                                Forms\Components\TextInput::make('sku')
-                                    ->unique(ignoreRecord: true)
-                                    ->maxLength(100)
-                                    ->columnSpanFull(),
-
-                                Forms\Components\RichEditor::make('description')
-                                    ->columnSpanFull(),
-                            ]),
-                            
-                        Forms\Components\Tabs\Tab::make('Pricing')
-                            ->schema([
-                                Forms\Components\TextInput::make('price')
-                                    ->numeric()
-                                    ->required()
-                                    ->prefix(config('settings.currency_symbol', '$')),
-                                    
-                                Forms\Components\TextInput::make('sale_price')
-                                    ->numeric()
-                                    ->prefix(config('settings.currency_symbol', '$'))
-                                    ->lt('price'),
-                                    
-                                Forms\Components\Toggle::make('sold_individually')
-                                    ->label('Sold individually')
-                                    ->default(false),
-                            ])->columns(3),
-                            
-                        Forms\Components\Tabs\Tab::make('Inventory')
-                            ->schema([
-                                Forms\Components\Select::make('stock_status')
-                                    ->options([
-                                        'in_stock' => 'In Stock',
-                                        'out_of_stock' => 'Out of Stock',
-                                        'on_backorder' => 'On Backorder',
-                                    ])
-                                    ->required(),
-                                    
-                                Forms\Components\TextInput::make('stock_qty')
-                                    ->numeric()
-                                    ->minValue(0),
-                                    
-                                Forms\Components\Toggle::make('manage_stock')
-                                    ->label('Manage stock?')
-                                    ->live(),
-                            ])->columns(3),
-                            
-                        Forms\Components\Tabs\Tab::make('Categories')
-                            ->schema([
-                                Forms\Components\Select::make('categories')
-                                    ->relationship('categories', 'data')
-                                    ->multiple()
-                                    ->preload()
-                                    ->searchable()
-                                    ->columnSpanFull(),
-                            ]),
-                            
-                        Forms\Components\Tabs\Tab::make('Image')
-                            ->schema([
-                                Forms\Components\FileUpload::make('image')
-                                    ->image()
-                                    ->directory('products')
-                                    ->columnSpanFull(),
-                            ]),
-                            
-                        Forms\Components\Tabs\Tab::make('Variations')
-                            ->visible(fn ($get) => $get('type') === 'variable')
-                            ->schema([
-                                Forms\Components\Repeater::make('variations')
-                                    ->relationship()
-                                    ->schema([
-                                        Forms\Components\TextInput::make('sku')
-                                            ->unique(ignoreRecord: true)
-                                            ->maxLength(100),
-
-                                            Forms\Components\TextInput::make('slug')
-                                            ->unique(ignoreRecord: true)
-                                            ->maxLength(100),
-                                            
-                                        Forms\Components\TextInput::make('price')
-                                            ->numeric()
-                                            ->required(),
-                                            
-                                        Forms\Components\TextInput::make('sale_price')
-                                            ->numeric(),
-                                            
-                                        Forms\Components\TextInput::make('stock_qty')
-                                            ->numeric()
-                                            ->minValue(0),
-                                            
-                                        Forms\Components\Select::make('stock_status')
-                                            ->options([
-                                                'in_stock' => 'In Stock',
-                                                'out_of_stock' => 'Out of Stock',
-                                                'on_backorder' => 'On Backorder',
-                                            ]),
-                                    ])
-                                    ->columns(2)
-                                    ->columnSpanFull(),
-                            ]),
+                Forms\Components\TextInput::make('image')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('author')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('slug')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\Select::make('type')
+                    ->options([
+                        'simple' => 'Simple',
+                        'variable' => 'Variable',
                     ])
-                    ->columnSpanFull(),
+                    ->required(),
+                Forms\Components\TextInput::make('sku')
+                    ->required()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('price')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                Forms\Components\TextInput::make('sale_price')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                Forms\Components\Select::make('stock_status')
+                    ->options([
+                        'in_stock' => 'In Stock',
+                        'out_of_stock' => 'Out of Stock',
+                    ])
+                    ->required(),
+                Forms\Components\TextInput::make('stock_qty')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                Forms\Components\Select::make('categories')
+                    ->relationship('categories', 'data')
+                    ->multiple()
+                    ->preload()
+                    ->searchable(),
             ]);
     }
 
@@ -160,93 +85,128 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\ImageColumn::make('image')
-                    ->stacked(),
-                    
+                    ->square(),
+                Tables\Columns\TextColumn::make('author')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('slug')
-                    ->searchable()
-                    ->sortable(),
-                    
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('type')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'simple' => 'info',
-                        'variable' => 'success',
-                        default => 'gray',
-                    })
-                    ->sortable(),
-                    
+                        'simple' => 'success',
+                        'variable' => 'warning',
+                    }),
+                Tables\Columns\TextColumn::make('sku')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('price')
-                    ->money()
-                    ->sortable()
-                    ->description(fn (Product $record) => $record->sale_price ? 
-                        'Sale: ' . ($record->sale_price) : null),
-                    
+                    ->money('EGP')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('sale_price')
+                    ->money('EGP')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('stock_status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
                         'in_stock' => 'success',
                         'out_of_stock' => 'danger',
-                        'on_backorder' => 'warning',
-                        default => 'gray',
-                    })
-                    ->sortable(),
-                    
+                    }),
                 Tables\Columns\TextColumn::make('stock_qty')
                     ->numeric()
                     ->sortable(),
-                    
                 Tables\Columns\TextColumn::make('categories.data')
-                    ->badge()
-                    ->separator(','),
-                    
+                    ->listWithLineBreaks()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // Tables\Filters\TrashedFilter::make(),
-                Tables\Filters\SelectFilter::make('type')
+                SelectFilter::make('type')
                     ->options([
                         'simple' => 'Simple',
                         'variable' => 'Variable',
-                    ]),
-                Tables\Filters\SelectFilter::make('categories')
-                    ->relationship('categories', 'data')
-                    ->multiple(),
-                Tables\Filters\SelectFilter::make('stock_status')
+                    ])
+                    ->multiple()
+                    ->searchable(),
+                SelectFilter::make('stock_status')
                     ->options([
                         'in_stock' => 'In Stock',
                         'out_of_stock' => 'Out of Stock',
-                        'on_backorder' => 'On Backorder',
-                    ]),
+                    ])
+                    ->multiple()
+                    ->searchable(),
+                SelectFilter::make('categories')
+                    ->relationship('categories', 'data')
+                    ->multiple()
+                    ->searchable()
+                    ->preload(),
+                Filter::make('price')
+                    ->form([
+                        Forms\Components\TextInput::make('min_price')
+                            ->numeric()
+                            ->placeholder('Min Price'),
+                        Forms\Components\TextInput::make('max_price')
+                            ->numeric()
+                            ->placeholder('Max Price'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_price'],
+                                fn (Builder $query, $price): Builder => $query->where('price', '>=', $price),
+                            )
+                            ->when(
+                                $data['max_price'],
+                                fn (Builder $query, $price): Builder => $query->where('price', '<=', $price),
+                            );
+                    }),
+                Filter::make('stock_qty')
+                    ->form([
+                        Forms\Components\TextInput::make('min_qty')
+                            ->numeric()
+                            ->placeholder('Min Quantity'),
+                        Forms\Components\TextInput::make('max_qty')
+                            ->numeric()
+                            ->placeholder('Max Quantity'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_qty'],
+                                fn (Builder $query, $qty): Builder => $query->where('stock_qty', '>=', $qty),
+                            )
+                            ->when(
+                                $data['max_qty'],
+                                fn (Builder $query, $qty): Builder => $query->where('stock_qty', '<=', $qty),
+                            );
+                    }),
             ])
             ->actions([
-                //Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    // Tables\Actions\ForceDeleteBulkAction::make(),
-                    // Tables\Actions\RestoreBulkAction::make(),
                 ]),
-            ])
-            ->defaultSort('created_at', 'desc')
-            ->groups([
-                Tables\Grouping\Group::make('type')
-                    ->label('Product Type')
-                    ->collapsible(),
             ]);
     }
 
     public static function getRelations(): array
     {
         return [
-            RelationManagers\Product\CategoriesRelationManager::class,
             RelationManagers\Product\VariationsRelationManager::class,
+            RelationManagers\Product\CategoriesRelationManager::class,
         ];
     }
 
@@ -255,7 +215,6 @@ class ProductResource extends Resource
         return [
             'index' => Pages\Product\ListProduct::route('/'),
             'create' => Pages\Product\CreateProduct::route('/create'),
-            //'view' => Pages\Product\ViewProduct::route('/{record}'),
             'edit' => Pages\Product\EditProduct::route('/{record}/edit'),
         ];
     }

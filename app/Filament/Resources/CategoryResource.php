@@ -12,12 +12,20 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\TernaryFilter;
 
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-tag';
+
+    protected static ?string $navigationGroup = 'Products Management';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $modelLabel = 'Category';
 
@@ -29,23 +37,13 @@ class CategoryResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('parent_id')
-                    ->relationship('parent', 'data')
-                    ->label('Parent Category')
-                    ->searchable()
-                    ->preload()
-                    ->nullable(),
-                    
                 Forms\Components\TextInput::make('data')
                     ->required()
                     ->maxLength(255)
-                    ->columnSpanFull(),
-                    
-                Forms\Components\FileUpload::make('image')
-                    ->image()
-                    ->directory('categories')
-                    ->nullable()
-                    ->columnSpanFull(),
+                    ->unique(ignoreRecord: true),
+                Forms\Components\TextInput::make('image')
+                    ->required()
+                    ->maxLength(255),
             ]);
     }
 
@@ -54,56 +52,74 @@ class CategoryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')
-                    ->numeric()
-                    ->sortable(),
-                    
-                Tables\Columns\ImageColumn::make('image')
-                    ->circular()
-                    ->defaultImageUrl(url('/images/placeholder.png')),
-                    
-                Tables\Columns\TextColumn::make('data')
-                    ->searchable()
-                    ->sortable(),
-                    
-                Tables\Columns\TextColumn::make('parent.data')
-                    ->label('Parent Category')
-                    ->searchable()
                     ->sortable()
-                    ->toggleable(),
-                    
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('data')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\ImageColumn::make('image')
+                    ->square(),
+                Tables\Columns\TextColumn::make('products_count')
+                ->label('Parent Category'),
+
+                Tables\Columns\TextColumn::make('parent.data')
+                ->counts('products')
+                ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                    
                 Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TrashedFilter::make(),
-                Tables\Filters\SelectFilter::make('parent_id')
-                    ->relationship('parent', 'data')
-                    ->label('Parent Category')
+                Filter::make('created_at')
+                    ->form([
+                        DatePicker::make('created_from'),
+                        DatePicker::make('created_until'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    }),
+                Filter::make('products_count')
+                    ->form([
+                        Forms\Components\TextInput::make('min_products')
+                            ->numeric()
+                            ->placeholder('Min Products'),
+                        Forms\Components\TextInput::make('max_products')
+                            ->numeric()
+                            ->placeholder('Max Products'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_products'],
+                                fn (Builder $query, $count): Builder => $query->has('products', '>=', $count),
+                            )
+                            ->when(
+                                $data['max_products'],
+                                fn (Builder $query, $count): Builder => $query->has('products', '<=', $count),
+                            );
+                    }),
             ])
             ->actions([
-                //Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
-            ])
-            ->defaultSort('id', 'desc')
-            ->groups([
-                Tables\Grouping\Group::make('parent.data')
-                    ->label('Parent Category')
-                    ->collapsible(),
             ]);
     }
 
@@ -128,14 +144,17 @@ class CategoryResource extends Resource
             ]);
     }
 
-
+    public static function getRelations(): array
+    {
+        return [
+        ];
+    }
 
     public static function getPages(): array
     {
         return [
             'index' => Pages\Category\ListCategory::route('/'),
             'create' => Pages\Category\CreateCategory::route('/create'),
-            //'view' => Pages\Category\ViewCategory::route('/{record}'),
             'edit' => Pages\Category\EditCategory::route('/{record}/edit'),
         ];
     }

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\CouponController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,6 +50,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Order Routes
     Route::apiResource('orders', OrderController::class)->except(['update']);
     Route::post('/orders/{id}/cancel', [OrderController::class, 'cancel']);
+
+    // Report Routes
+    Route::prefix('reports')->group(function () {
+        Route::get('/sales', [ReportController::class, 'salesReport']);
+        Route::get('/inventory', [ReportController::class, 'inventoryReport']);
+        Route::get('/customers', [ReportController::class, 'customerReport']);
+    });
 });
 
 // Public Routes

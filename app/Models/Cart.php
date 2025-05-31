@@ -17,7 +17,11 @@ class Cart extends Model
         'total',
     ];
 
-
+    // public function getTotalAttribute()
+    // {
+    //     return 0 ;
+    //     // return round($this->total) ?? 0 ;
+    // }
     public function user()
     {
         return $this->belongsTo(User::class);

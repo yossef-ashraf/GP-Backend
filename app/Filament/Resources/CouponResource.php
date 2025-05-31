@@ -12,12 +12,20 @@ use Filament\Infolists\Infolist;
 use Filament\Infolists\Components;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\TernaryFilter;
 
 class CouponResource extends Resource
 {
     protected static ?string $model = Coupon::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
+
+    protected static ?string $navigationGroup = 'Orders Management';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'Coupon';
 
@@ -31,41 +39,39 @@ class CouponResource extends Resource
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
-                    ->maxLength(255)
-                    ->columnSpanFull(),
-                    
+                    ->maxLength(255),
                 Forms\Components\TextInput::make('code')
                     ->required()
-                    ->unique(ignoreRecord: true)
-                    ->maxLength(50)
-                    ->columnSpanFull(),
-                    
+                    ->maxLength(255)
+                    ->unique(ignoreRecord: true),
                 Forms\Components\TextInput::make('discount_value')
-                    ->numeric()
                     ->required()
-                    ->prefix(fn ($state) => self::getDiscountPrefix())
-                    ->columnSpanFull(),
-                    
+                    ->numeric()
+                    ->default(0),
                 Forms\Components\Select::make('discount_type')
                     ->options([
                         'percentage' => 'Percentage',
                         'fixed' => 'Fixed Amount',
                     ])
-                    ->required()
-                    ->live()
-                    ->columnSpanFull(),
-                    
-                Forms\Components\DateTimePicker::make('valid_from')
-                    ->required()
-                    ->columnSpanFull(),
-                    
-                Forms\Components\DateTimePicker::make('valid_to')
-                    ->required()
-                    ->columnSpanFull(),
-                    
+                    ->required(),
+                Forms\Components\DatePicker::make('valid_from')
+                    ->required(),
+                Forms\Components\DatePicker::make('valid_to')
+                    ->required(),
                 Forms\Components\Toggle::make('is_active')
-                    ->default(true)
-                    ->columnSpanFull(),
+                    ->required(),
+                Forms\Components\TextInput::make('usage_limit')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                Forms\Components\TextInput::make('usage_count')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
+                Forms\Components\TextInput::make('min_order_amount')
+                    ->required()
+                    ->numeric()
+                    ->default(0),
             ]);
     }
 
@@ -79,75 +85,110 @@ class CouponResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('code')
-                    ->searchable()
-                    ->sortable()
-                    ->description(fn (Coupon $record) => $record->name),
-                    
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('discount_value')
-                    ->formatStateUsing(fn ($state, Coupon $record) => 
-                        $record->discount_type === 'percentage' ? 
-                        "{$state}%" : 
-                        (config('settings.currency_symbol') ?? '$') . $state
-                    )
-                    ->sortable(),
-                    
-                Tables\Columns\TextColumn::make('valid_from')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
-                    
-                Tables\Columns\TextColumn::make('valid_to')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(),
-                    
-                Tables\Columns\IconColumn::make('is_active')
-                    ->boolean()
-                    ->sortable(),
-                    
-                Tables\Columns\TextColumn::make('orders_count')
-                    ->counts('orders')
-                    ->label('Times Used')
                     ->numeric()
                     ->sortable(),
-                    
+                Tables\Columns\TextColumn::make('discount_type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'percentage' => 'success',
+                        'fixed' => 'primary',
+                    }),
+                Tables\Columns\TextColumn::make('valid_from')
+                    ->date()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('valid_to')
+                    ->date()
+                    ->sortable(),
+                Tables\Columns\IconColumn::make('is_active')
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('usage_limit')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('usage_count')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('min_order_amount')
+                    ->money('EGP')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                // Tables\Filters\TrashedFilter::make(),
-                Tables\Filters\SelectFilter::make('discount_type')
+                SelectFilter::make('discount_type')
                     ->options([
                         'percentage' => 'Percentage',
                         'fixed' => 'Fixed Amount',
-                    ]),
-                Tables\Filters\Filter::make('active')
-                    ->label('Active Coupons')
-                    ->query(fn (Builder $query) => $query->where('is_active', true)),
-                Tables\Filters\Filter::make('expired')
-                    ->label('Expired Coupons')
-                    ->query(fn (Builder $query) => $query->where('valid_to', '<', now())),
+                    ])
+                    ->multiple()
+                    ->searchable(),
+                Filter::make('is_active')
+                    ->query(fn (Builder $query): Builder => $query->where('is_active', true)),
+                Filter::make('valid_from')
+                    ->form([
+                        DatePicker::make('valid_from'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['valid_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('valid_from', '>=', $date),
+                            );
+                    }),
+                Filter::make('valid_to')
+                    ->form([
+                        DatePicker::make('valid_to'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['valid_to'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('valid_to', '<=', $date),
+                            );
+                    }),
+                Filter::make('usage_count')
+                    ->form([
+                        Forms\Components\TextInput::make('min_usage')
+                            ->numeric()
+                            ->placeholder('Min Usage'),
+                        Forms\Components\TextInput::make('max_usage')
+                            ->numeric()
+                            ->placeholder('Max Usage'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_usage'],
+                                fn (Builder $query, $count): Builder => $query->where('usage_count', '>=', $count),
+                            )
+                            ->when(
+                                $data['max_usage'],
+                                fn (Builder $query, $count): Builder => $query->where('usage_count', '<=', $count),
+                            );
+                    }),
             ])
             ->actions([
-                //Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\ForceDeleteBulkAction::make(),
-                    Tables\Actions\RestoreBulkAction::make(),
                 ]),
-            ])
-            ->defaultSort('valid_to', 'desc')
-            ->groups([
-                Tables\Grouping\Group::make('discount_type')
-                    ->label('Discount Type')
-                    ->collapsible(),
             ]);
     }
 
@@ -196,7 +237,6 @@ class CouponResource extends Resource
         return [
             'index' => Pages\Coupon\ListCoupon::route('/'),
             'create' => Pages\Coupon\CreateCoupon::route('/create'),
-            //'view' => Pages\Coupon\ViewCoupon::route('/{record}'),
             'edit' => Pages\Coupon\EditCoupon::route('/{record}/edit'),
         ];
     }
