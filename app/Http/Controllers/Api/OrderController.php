@@ -100,7 +100,7 @@ class OrderController extends Controller
         // Calculate shipping cost based on area
         $shippingValue = \App\Models\ShippingValue::where('area_id', $data['area_id'])->first();
         $shippingCost = $shippingValue ? $shippingValue->value : 0;
-
+        
         $coupon = null;
         if (isset($data['coupon_code'])) {
             $coupon = Coupon::where('code', $data['coupon_code'])->first();
@@ -143,13 +143,15 @@ class OrderController extends Controller
                 $discount = min($discount, $subtotal);
                 $subtotal -= $discount;
             }
+            $subtotal = $data['total_amount'] ?? $subtotal;
+            $shippingCost = $subtotal > 200 ? 0 : 20;
 
             $order = Order::create([
                 'user_id' => $userId,
                 'address' => $data['address'],
                 'coupon_id' => $coupon?->id,
                 'tracking_number' => 'ORD-' . strtoupper(Str::random(10)),
-                'total_amount' => $subtotal,
+                'total_amount' => $subtotal ,
                 'area_id' => $data['area_id'],
                 'shipping_cost' => $shippingCost,
                 'payment_method' => $data['payment_method'],
