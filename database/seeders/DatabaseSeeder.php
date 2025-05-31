@@ -184,11 +184,11 @@ class DatabaseSeeder extends Seeder
         }
 
         // 9. Create orders
-        $startDate = Carbon::create(2024, 3, 1);
-        $endDate = now();
+        $startDate = Carbon::now()->subMonths(3);
+        $endDate = Carbon::now();
 
         $users->each(function ($user) use ($products, $startDate, $endDate, $areas) {
-            $orderCount = rand(2, 5);
+            $orderCount = rand(3, 8);
 
             for ($i = 0; $i < $orderCount; $i++) {
                 $couponId = rand(0, 10) > 7 ? Coupon::inRandomOrder()->first()?->id : null;
@@ -212,7 +212,7 @@ class DatabaseSeeder extends Seeder
                 ]);
 
                 $totalAmount = 0;
-                $orderBooksCount = rand(1, 5);
+                $orderBooksCount = rand(2, 4);
                 $selectedProducts = $products->random($orderBooksCount);
 
                 foreach ($selectedProducts as $product) {
@@ -225,6 +225,28 @@ class DatabaseSeeder extends Seeder
                     OrderItem::create([
                         'order_id' => $order->id,
                         'product_id' => $product->id,
+                        'variation_id' => $variation?->id,
+                        'quantity' => $quantity,
+                        'price' => $price,
+                        'total_amount' => $itemTotal,
+                        'variation_data' => null,
+                        'created_at' => $orderDate,
+                        'updated_at' => $orderDate,
+                    ]);
+
+                    $totalAmount += $itemTotal;
+                }
+
+                if ($totalAmount < 50) {
+                    $additionalProduct = $products->random();
+                    $variation = $additionalProduct->variations()->exists() ? $additionalProduct->variations()->inRandomOrder()->first() : null;
+                    $quantity = 1;
+                    $price = $variation ? $variation->price : $additionalProduct->price;
+                    $itemTotal = $price * $quantity;
+
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'product_id' => $additionalProduct->id,
                         'variation_id' => $variation?->id,
                         'quantity' => $quantity,
                         'price' => $price,
@@ -250,16 +272,6 @@ class DatabaseSeeder extends Seeder
                     'total_amount' => $totalAmount,
                     'updated_at' => $orderDate,
                 ]);
-
-                //  if (rand(0, 1)) {
-                //     OrderNote::create([
-                //     'order_id' => $order->id,
-                //     'note' => 'هذا طلب يحتوي على كتب مميزة جداً!',
-                //     'created_at' => $orderDate->copy()->addMinutes(rand(1, 60)),
-                //     'updated_at' => $orderDate->copy()->addMinutes(rand(1, 60)),
-                // ]);
-
-                // }
             }
         });
     }

@@ -7,6 +7,7 @@ use App\Http\Traits\ApiResponseTrait;
 use App\Models\Cart;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class CartController extends Controller
@@ -59,13 +60,18 @@ class CartController extends Controller
             return $this->errorResponse('Product is out of stock', 422);
         }
 
-        $cart = Cart::create([
-            'user_id' => $user->id,
-            'product_id' => $product->id,
-            'variation_id' => $request->variation_id,
-            'quantity' => $request->quantity,
-            'total' => 0,
-        ]);
+        $cart = Cart::updateOrCreate(
+            [
+                'user_id' => $user->id,
+                'product_id' => $product->id,
+                'variation_id' => $request->variation_id,
+            ],
+            [
+                'quantity' => DB::raw('quantity + ' . (int) $request->quantity),
+                'total' => 0, // You can calculate the correct total here if needed
+            ]
+        );
+        
 
         return $this->successResponse($cart->load(['product', 'variation']), 'Cart item added successfully');
     }
